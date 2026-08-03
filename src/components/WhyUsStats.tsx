@@ -74,6 +74,49 @@ export const WhyUsStats: React.FC<WhyUsStatsProps> = ({ currentLang }) => {
           ))}
         </div>
 
+        {/* Yirik Hamkorlarimiz va Buyurtmachilarimiz */}
+        {t.partnersList && (
+          <div className="pt-12 border-t border-white/10 space-y-8">
+            <div className="text-center space-y-2">
+              <h3 className="text-xl font-extrabold text-white tracking-wide">
+                {t.partnersTitle}
+              </h3>
+              <p className="text-xs text-slate-400 max-w-xl mx-auto">
+                {currentLang === 'uz' 
+                  ? "Sanam tikuvchilik fabrikasi tomonidan maxsus va korporativ ishchi kiyimlari tikib berilgan yirik korxonalar"
+                  : currentLang === 'ru'
+                  ? "Крупные предприятия, для которых швейная фабрика Sanam сшила специальную рабочую одежду"
+                  : "Major enterprises for which Sanam Garment Factory has manufactured specialized workwear"}
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {t.partnersList.map((partner: any, idx: number) => (
+                <div
+                  key={idx}
+                  className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-3 hover:bg-white/10 hover:border-[#FFC107]/40 transition-all duration-300 relative overflow-hidden group text-left"
+                >
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#FFC107]/10 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#FFC107] bg-[#FFC107]/10 px-2 py-0.5 rounded-md border border-[#FFC107]/20">
+                      {partner.project}
+                    </span>
+                  </div>
+
+                  <h4 className="text-base font-extrabold text-white tracking-tight">
+                    {partner.name}
+                  </h4>
+                  
+                  <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                    {partner.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
       </div>
     </section>
   );

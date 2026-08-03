@@ -148,6 +148,29 @@ export const translations = {
           desc: "Mijoz xohishiga ko'ra dizayn, bichim va matolarni moslashtirib berish.",
         },
       ],
+      partnersTitle: "Yirik Hamkorlarimiz va Buyurtmachilarimiz",
+      partnersList: [
+        {
+          name: "Qarshi Ximzavod",
+          project: "5000+ ishchi formasi",
+          desc: "Ximzavod ishchilariga maxsus issiqlikka chidamli va sifatli ishchi formalar to'liq tikib berilgan."
+        },
+        {
+          name: "Qashqadaryo HETK",
+          project: "Elektrotarmoq xodimlari",
+          desc: "Viloyat energetika sohasi ishchilari uchun yuqori kuchlanishdan himoya qiluvchi uniformalar tikilgan."
+        },
+        {
+          name: "Qashqadaryo Suvsoz",
+          project: "Suvsoz ishchi formalari",
+          desc: "Suv xo'jaligi xodimlari uchun namlikka chidamli va nur qaytaruvchi maxsus uniformalar ishlab chiqarilgan."
+        },
+        {
+          name: "Qarshi Cho'lquvar",
+          project: "Qurilish maxsus kiyimlari",
+          desc: "Yirik qurilish loyihalari ishchilari uchun o'ta chidamli matolardan chiroyli formalar tikilgan."
+        }
+      ],
     },
     testimonials: {
       badge: "Mijozlar Fikri",
@@ -451,6 +474,29 @@ export const translations = {
           desc: "Подбор дизайна, кроя и тканей с учетом любых пожеланий заказчика.",
         },
       ],
+      partnersTitle: "Наши Крупные Партнеры и Заказчики",
+      partnersList: [
+        {
+          name: "Каршинский Химзавод",
+          project: "5000+ рабочих комплектов",
+          desc: "Пошив качественной термостойкой спецодежды и униформы для рабочих химзавода."
+        },
+        {
+          name: "Кашкадарья РЭС (HETK)",
+          project: "Спецодежда для энергетиков",
+          desc: "Изготовление защитной спецодежды для сотрудников электросетей области."
+        },
+        {
+          name: "Кашкадарья Сувсоз",
+          project: "Формы для водоканала",
+          desc: "Влагозащитная спецодежда со светоотражающими элементами для сотрудников водоснабжения."
+        },
+        {
+          name: "Карши Чулкувар",
+          project: "Строительная спецодежда",
+          desc: "Рабочая форма из прочных и износостойких тканей для сотрудников крупной строительной компании."
+        }
+      ],
     },
     testimonials: {
       badge: "Отзывы Клиентов",
@@ -753,6 +799,29 @@ export const translations = {
           title: "Custom Tailoring & Design",
           desc: "Tailored to your exact specifications, patterns, and fabric choices.",
         },
+      ],
+      partnersTitle: "Our Major Partners & Clients",
+      partnersList: [
+        {
+          name: "Karshi Chemical Plant",
+          project: "5000+ worker uniforms",
+          desc: "Tailored high-quality specialized flame-resistant workwear and uniforms for chemical plant workers."
+        },
+        {
+          name: "Qashqadaryo Electric Grid (HETK)",
+          project: "Electrician uniforms",
+          desc: "Manufactured protective and heat-resistant uniforms for regional electricity grid employees."
+        },
+        {
+          name: "Qashqadaryo Suvsoz",
+          project: "Water utility workwear",
+          desc: "Waterproof protective workwear with reflective strips for water supply workers."
+        },
+        {
+          name: "Karshi Cholquvar",
+          project: "Construction workwear",
+          desc: "Heavy-duty protective uniforms for staff of a major regional construction enterprise."
+        }
       ],
     },
     testimonials: {
