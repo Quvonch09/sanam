@@ -7,6 +7,7 @@ import { Hero } from '@/components/Hero';
 import { Advantages } from '@/components/Advantages';
 import { AboutUs } from '@/components/AboutUs';
 import { ProductionGallery } from '@/components/ProductionGallery';
+import { TeamSection } from '@/components/TeamSection';
 import { NewsSection } from '@/components/NewsSection';
 import { WhyUsStats } from '@/components/WhyUsStats';
 import { Testimonials } from '@/components/Testimonials';
@@ -56,7 +57,8 @@ function MainLanding() {
         onOpenCalculator={() => setIsCalculatorOpen(true)}
       />
 
-
+      {/* 5. Rahbariyat / Management Team */}
+      <TeamSection currentLang={currentLang} />
 
       {/* 6. Fabrika Yangiliklari / News */}
       <NewsSection currentLang={currentLang} />

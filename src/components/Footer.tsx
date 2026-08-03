@@ -39,6 +39,7 @@ export const Footer: React.FC<FooterProps> = ({ currentLang }) => {
             <ul className="space-y-2 text-xs font-semibold">
               <li><a href="#about" className="hover:text-[#FFC107] transition-colors">{navT.about}</a></li>
               <li><a href="#products" className="hover:text-[#FFC107] transition-colors">{navT.products}</a></li>
+              <li><a href="#team" className="hover:text-[#FFC107] transition-colors">{translations[currentLang].team.title}</a></li>
               <li><a href="#news" className="hover:text-[#FFC107] transition-colors">{navT.news}</a></li>
               <li><a href="#contact" className="hover:text-[#FFC107] transition-colors">{navT.contact}</a></li>
             </ul>

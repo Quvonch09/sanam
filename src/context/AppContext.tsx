@@ -205,36 +205,6 @@ const initialProducts: ProductItem[] = [
 
 const initialTeam: TeamMember[] = [
   {
-    id: 'team-1',
-    name: 'Akramov Bahodir Salomovich',
-    role: 'Директор',
-  },
-  {
-    id: 'team-2',
-    name: 'Narzullayeva Dilfuza Rahimzoda',
-    role: 'Кадрлар булими бошлиги',
-  },
-  {
-    id: 'team-3',
-    name: 'Qodirov Alisher Jo‘rayevich',
-    role: 'Ишлаб чикариш сехи бошлиги',
-  },
-  {
-    id: 'team-4',
-    name: 'Karimov Jamshid Obidovich',
-    role: 'Таъминот ва савдо булим бошлиги',
-  },
-  {
-    id: 'team-5',
-    name: 'Xolmurodov Otabek',
-    role: 'Бригада мастерлари',
-  },
-  {
-    id: 'team-6',
-    name: 'Sultonov Jasur Ro‘zimurodovich',
-    role: 'Тажриба сехи булими бошлиги',
-  },
-  {
     id: 'team-7',
     name: 'Saliyev Jamshid Joʻrayevich',
     role: 'supply',
@@ -355,7 +325,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (storedProducts) setProducts(JSON.parse(storedProducts));
 
       const storedTeam = localStorage.getItem('sanam_team');
-      if (storedTeam) setTeamList(JSON.parse(storedTeam));
+      if (storedTeam) {
+        const parsedTeam = JSON.parse(storedTeam).filter(
+          (member: any) => !['team-1', 'team-2', 'team-3', 'team-4', 'team-5', 'team-6'].includes(member.id)
+        );
+        setTeamList(parsedTeam);
+        localStorage.setItem('sanam_team', JSON.stringify(parsedTeam));
+      }
 
       const storedNews = localStorage.getItem('sanam_news');
       if (storedNews) setNewsList(JSON.parse(storedNews));
