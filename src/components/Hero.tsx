@@ -3,6 +3,7 @@
 import React from 'react';
 import { useApp } from '@/context/AppContext';
 import { Language, translations } from '../data/translations';
+import { SanamLogo } from './SanamLogo';
 import {
   MapPin,
   ShoppingBag,
@@ -155,14 +156,8 @@ export const Hero: React.FC<HeroProps> = ({ currentLang, onOpenCalculator }) => 
 
               {/* Graphic Icon Display */}
               <div className="py-6 flex flex-col items-center justify-center text-center space-y-4">
-                <div className="w-28 h-28 rounded-full bg-white/10 border border-white/20 flex items-center justify-center p-4 backdrop-blur-md shadow-inner">
-                  <svg className="w-16 h-16 text-[#FFC107]" viewBox="0 0 100 100" fill="currentColor">
-                    <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" strokeWidth="3" strokeDasharray="6 3" />
-                    <rect x="25" y="42" width="50" height="25" rx="3" fill="currentColor" />
-                    <circle cx="75" cy="54" r="7" fill="#1E1A5B" />
-                    <rect x="30" y="32" width="4" height="10" fill="currentColor" />
-                    <rect x="25" y="67" width="50" height="4" fill="currentColor" />
-                  </svg>
+                <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center shadow-lg transition-transform hover:scale-105">
+                  <SanamLogo size="lg" showText={false} />
                 </div>
                 <div>
                   <h3 className="text-xl font-black text-white">{t.heroCardTitle}</h3>

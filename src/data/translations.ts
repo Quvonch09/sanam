@@ -28,13 +28,13 @@ export const translations = {
       ctaMap: "Yo'nalish olish (Google Maps)",
       ratingBadge: "4.7 Reyting (11+ Izoh)",
       quoteHighlight: '"Quality products! Sifat va ishonch kafolati"',
-      openBadge: "FABRIKA OCHIQ • 18:00 GACHA",
+      openBadge: "FABRIKA OCHIQ • 24/6",
       quality100: "100% Sifat",
       qualityGuarantee: "Kafolatlangan",
       wholesalePrice: "Ulgurji Narx",
       directFactory: "Fabrikadan to'g'ri",
       calcEstimateBtn: "Buyurtma smetasini hisoblash",
-      heroCardTitle: "To'qimachilik zavodi va tikuvchilik fabrikasi",
+      heroCardTitle: "Sanam tikuvchilik fabrikasi",
       heroCardAddress: "ul. I.Karimova, 221, Qarshi, Qashqadaryo",
     },
     advantages: {
@@ -61,8 +61,8 @@ export const translations = {
     about: {
       badge: "Tajriba va Ishonch",
       title: "Qashqadaryo Viloyatida Sanoat Tikuvchilik Yetakchisi",
-      subTitle: "SANAM OFFICIAL Garment Factory Haqida",
-      description1: "SANAM OFFICIAL - Qashqadaryo viloyati Qarshi shahrida joylashgan zamonaviy to'qimachilik va tikuvchilik fabrikasi. Ko'p yillik tajribamiz va yuqori malakali tikuvchi-mutassislarimiz bilan mijozlarimizga eng yuqori sifatdagi kiyimlarni taqdim etib kelmoqdamiz.",
+      subTitle: "Sanam tikuvchilik fabrikasi Haqida",
+      description1: "Sanam tikuvchilik fabrikasi - Qashqadaryo viloyati Qarshi shahrida joylashgan zamonaviy to'qimachilik va tikuvchilik fabrikasi. Ko'p yillik tajribamiz va yuqori malakali tikuvchi-mutassislarimiz bilan mijozlarimizga eng yuqori sifatdagi kiyimlarni taqdim etib kelmoqdamiz.",
       description2: "Fabrikamiz Yaponiyaning ilg'or tikuv uskunalari va avtomatlashtirilgan kesish komplekslari bilan jihozlangan. Biz erkaklar, ayollar, bolalar kiyimlari, korporativ unifomalar va maxsus ishchi kiyimlarini ulgurji hamda chakana tartibda tikib beramiz.",
       features: [
         "100% Sifatli va ekologik toza matolar",
@@ -71,7 +71,7 @@ export const translations = {
         "O'z vaqtida va kafolatli topshirish",
       ],
       stats: {
-        years: "10+ Yil",
+        years: "30+ Yil",
         exp: "Tadbirkorlik Tajribasi",
         rating: "4.7 ★",
         reviews: "Google Maps Izohlari",
@@ -104,9 +104,9 @@ export const translations = {
     },
     team: {
       badge: "BOSHGARUV VA RAHBARIYAT",
-      title: "SANAM Garment Factory Rahbariyati",
+      title: "Sanam tikuvchilik fabrikasi Rahbariyati",
       subtitle: "Ko'p yillik tajribaga ega soha mutaxassislari va sexi rahbarlari",
-      verified: "SANAM Official Rahbariyati",
+      verified: "Sanam tikuvchilik fabrikasi Rahbariyati",
       roles: {
         director: "Директор",
         hrHead: "Кадрлар булими бошлиги",
@@ -126,12 +126,12 @@ export const translations = {
     },
     whyUs: {
       badge: "Nega Bizni Tanlashadi?",
-      title: "Raqamlarda SANAM Garment Factory",
+      title: "Raqamlarda Sanam tikuvchilik fabrikasi",
       subtitle: "Qarshi shahridagi eng ishonchli tikuvchilik brendi ko'rsatkichlari",
       stats: [
         { value: "4.7★", label: "Google Maps Reytingi", sub: "11+ Samimiy izohlar" },
         { value: "100%", label: "Sifat Kafolati", sub: "Premium to'qimachilik" },
-        { value: "18:00", label: "Har kuni ochiq", sub: "Uzluksiz xizmat ko'rsatish" },
+        { value: "24/6", label: "Ish vaqti 24/6", sub: "Dushanba - Shanba: 24 soat" },
         { value: "1000+", label: "Bajarilgan Buyurtmalar", sub: "Mamnun mijozlar" },
       ],
       reasons: [
@@ -195,7 +195,7 @@ export const translations = {
         addressText: "ул. И.Каримова дом 221, Qarshi, Qashqadaryo viloyati, Uzbekistan",
         codeText: "Google Plus Code: RQWW+J4 Qarshi",
         hoursTitle: "ISH VAQTI",
-        hoursText: "Har kuni ochiq, 18:00 gacha",
+        hoursText: "Dushanba - Shanba: 24 soat",
         phoneTitle: "TELEFON RAQAMI",
         phone1: "+998 87 805 66 66",
         socialsTitle: "IJTIMOIY TARMOQLARIMIZ",
@@ -331,13 +331,13 @@ export const translations = {
       ctaMap: "Проложить маршрут (Google Maps)",
       ratingBadge: "4.7 Рейтинг (11+ Отзывов)",
       quoteHighlight: '"Quality products! Гарантия качества и надежности"',
-      openBadge: "ФАБРИКА ОТКРЫТА • ДО 18:00",
+      openBadge: "РАБОТАЕМ • 24/6",
       quality100: "100% Качество",
       qualityGuarantee: "Гарантировано",
       wholesalePrice: "Оптовая Цена",
       directFactory: "Напрямую с фабрики",
       calcEstimateBtn: "Рассчитать смету заказа",
-      heroCardTitle: "Текстильный завод и швейная фабрика",
+      heroCardTitle: "Швейная фабрика Sanam",
       heroCardAddress: "ул. И.Каримова, 221, Карши, Кашкадарья",
     },
     advantages: {
@@ -364,8 +364,8 @@ export const translations = {
     about: {
       badge: "Опыт и Доверие",
       title: "Лидер Промышленного Пошива в Кашкадарьинской Области",
-      subTitle: "О компании SANAM OFFICIAL Garment Factory",
-      description1: "SANAM OFFICIAL — современная текстильная и швейная фабрика, расположенная в городе Карши Кашкадарьинской области. Благодаря многолетнему опыту и высококвалифицированным специалистам мы предоставляем клиентам одежду высочайшего качества.",
+      subTitle: "О швейной фабрике Sanam",
+      description1: "Швейная фабрика Sanam — современная текстильная и швейная фабрика, расположенная в городе Карши Кашкадарьинской области. Благодаря многолетнему опыту и высококвалифицированным специалистам мы предоставляем клиентам одежду высочайшего качества.",
       description2: "Наша фабрика оснащена передовым японским швейным оборудованием и автоматизированными раскройными комплексами. Мы изготавливаем мужскую, женскую, детскую одежду, корпоративную форму и спецодежду оптом и в розницу.",
       features: [
         "100% Качественные и экологически чистые ткани",
@@ -374,7 +374,7 @@ export const translations = {
         "Своевременная сдача с гарантией качества",
       ],
       stats: {
-        years: "10+ Лет",
+        years: "30+ Лет",
         exp: "Опыт в Предпринимательстве",
         rating: "4.7 ★",
         reviews: "Отзывы на Google Maps",
@@ -407,9 +407,9 @@ export const translations = {
     },
     team: {
       badge: "РУКОВОДСТВО И УПРАВЛЕНИЕ",
-      title: "Руководство SANAM Garment Factory",
+      title: "Руководство швейной фабрики Sanam",
       subtitle: "Опытные специалисты и руководители цехов с многолетним стажем",
-      verified: "Руководство SANAM Official",
+      verified: "Руководство швейной фабрики Sanam",
       roles: {
         director: "Директор",
         hrHead: "Начальник отдела кадров",
@@ -429,12 +429,12 @@ export const translations = {
     },
     whyUs: {
       badge: "Почему Выбирают Нас?",
-      title: "SANAM Garment Factory в Цифрах",
+      title: "Швейная фабрика Sanam в Цифрах",
       subtitle: "Показатели самого надежного швейного бренда в городе Карши",
       stats: [
         { value: "4.7★", label: "Рейтинг Google Maps", sub: "11+ Реальных отзывов" },
         { value: "100%", label: "Гарантия Качества", sub: "Премиум текстиль" },
-        { value: "18:00", label: "Открыто каждый день", sub: "Бесперебойная работа" },
+        { value: "24/6", label: "Режим работы 24/6", sub: "Понедельник - Суббота: 24 часа" },
         { value: "1000+", label: "Выполненных Заказов", sub: "Довольные клиенты" },
       ],
       reasons: [
@@ -498,7 +498,7 @@ export const translations = {
         addressText: "ул. И.Каримова дом 221, г. Карши, Кашкадарьинская область, Узбекистан",
         codeText: "Google Plus Code: RQWW+J4 Qarshi",
         hoursTitle: "РЕЖИМ РАБОТЫ",
-        hoursText: "Открыто каждый день до 18:00",
+        hoursText: "Понедельник - Суббота: 24 часа",
         phoneTitle: "ТЕЛЕФОН",
         phone1: "+998 87 805 66 66",
         socialsTitle: "НАШИ СОЦСЕТИ",
@@ -634,13 +634,13 @@ export const translations = {
       ctaMap: "Get Directions (Google Maps)",
       ratingBadge: "4.7 Rating (11+ Reviews)",
       quoteHighlight: '"Quality products! Premium tailoring & trust"',
-      openBadge: "FACTORY OPEN • UNTIL 18:00",
+      openBadge: "OPEN • 24/6",
       quality100: "100% Quality",
       qualityGuarantee: "Guaranteed",
       wholesalePrice: "Wholesale Price",
       directFactory: "Direct from Factory",
       calcEstimateBtn: "Calculate Order Estimate",
-      heroCardTitle: "Textile Mill & Garment Factory",
+      heroCardTitle: "Sanam Garment Factory",
       heroCardAddress: "221 I.Karimov str., Qarshi, Qashqadaryo",
     },
     advantages: {
@@ -667,8 +667,8 @@ export const translations = {
     about: {
       badge: "Experience & Trust",
       title: "Industrial Tailoring Leader in Qashqadaryo Region",
-      subTitle: "About SANAM OFFICIAL Garment Factory",
-      description1: "SANAM OFFICIAL is a modern textile mill and garment factory located in Qarshi, Qashqadaryo Region, Uzbekistan. With years of industry expertise and highly skilled tailors, we deliver top-tier apparel to our clients.",
+      subTitle: "About Sanam Garment Factory",
+      description1: "Sanam Garment Factory is a modern textile mill and garment factory located in Qarshi, Qashqadaryo Region, Uzbekistan. With years of industry expertise and highly skilled tailors, we deliver top-tier apparel to our clients.",
       description2: "Our facility is equipped with state-of-the-art Japanese sewing machinery and automated cutting systems. We manufacture men's, women's, children's apparel, corporate uniforms, and specialized workwear for wholesale and retail.",
       features: [
         "100% Quality & eco-friendly fabrics",
@@ -677,7 +677,7 @@ export const translations = {
         "On-time delivery with guaranteed craftsmanship",
       ],
       stats: {
-        years: "10+ Years",
+        years: "30+ Years",
         exp: "Business Experience",
         rating: "4.7 ★",
         reviews: "Google Maps Reviews",
@@ -710,9 +710,9 @@ export const translations = {
     },
     team: {
       badge: "MANAGEMENT & LEADERSHIP",
-      title: "SANAM Garment Factory Leadership",
+      title: "Sanam Garment Factory Leadership",
       subtitle: "Experienced industry experts & shop supervisors with proven track records",
-      verified: "SANAM Official Leadership",
+      verified: "Sanam Garment Factory Leadership",
       roles: {
         director: "Director",
         hrHead: "HR Department Head",
@@ -732,12 +732,12 @@ export const translations = {
     },
     whyUs: {
       badge: "Why Choose Us?",
-      title: "SANAM Garment Factory in Numbers",
+      title: "Sanam Garment Factory in Numbers",
       subtitle: "Metrics of the most trusted sewing brand in Qarshi city",
       stats: [
         { value: "4.7★", label: "Google Maps Rating", sub: "11+ Verified Reviews" },
         { value: "100%", label: "Quality Guarantee", sub: "Premium Textiles" },
-        { value: "18:00", label: "Open Daily", sub: "Continuous Operations" },
+        { value: "24/6", label: "Working hours 24/6", sub: "Monday - Saturday: 24 hours" },
         { value: "1000+", label: "Completed Orders", sub: "Satisfied Clients" },
       ],
       reasons: [
@@ -801,7 +801,7 @@ export const translations = {
         addressText: "221 I.Karimov street, Qarshi, Qashqadaryo Region, Uzbekistan",
         codeText: "Google Plus Code: RQWW+J4 Qarshi",
         hoursTitle: "WORKING HOURS",
-        hoursText: "Open daily until 18:00",
+        hoursText: "Monday - Saturday: 24 hours",
         phoneTitle: "PHONE NUMBER",
         phone1: "+998 87 805 66 66",
         socialsTitle: "OUR SOCIAL MEDIA",
