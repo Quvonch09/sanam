@@ -292,7 +292,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
           
           {/* Logo & Header */}
           <div className={`px-2 pt-2 border-b pb-4 space-y-3 ${isDarkMode ? 'border-slate-800' : 'border-slate-100'}`}>
-            <SanamLogo size="sm" showText={true} isDarkMode={isDarkMode} />
+            <SanamLogo size="sm" showText={true} isDarkMode={isDarkMode} gapColor={isDarkMode ? '#0f172a' : '#ffffff'} />
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
               <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-500">SANAM Admin</span>
@@ -1314,7 +1314,7 @@ export default function AdminPage() {
       <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 font-sans">
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full space-y-6 shadow-2xl">
           <div className="text-center space-y-2">
-            <SanamLogo size="md" className="justify-center" isDarkMode={true} />
+            <SanamLogo size="md" className="justify-center" isDarkMode={true} gapColor="#0f172a" />
             <h2 className="text-xl font-extrabold text-white">{tLogin.title}</h2>
             <p className="text-xs text-slate-400 font-mono">
               SANAM Garment Factory Control Center

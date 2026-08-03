@@ -25,7 +25,7 @@ export const Footer: React.FC<FooterProps> = ({ currentLang }) => {
           
           {/* Brand Col */}
           <div className="space-y-4 md:col-span-1">
-            <SanamLogo size="md" isDarkMode={true} />
+            <SanamLogo size="md" isDarkMode={true} gapColor={isDarkMode ? '#020617' : '#1E1A5B'} />
             <p className="text-xs leading-relaxed text-slate-300">
               {t.tagline}
             </p>
