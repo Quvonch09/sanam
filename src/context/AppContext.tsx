@@ -493,6 +493,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setLeads(updated);
     localStorage.setItem('sanam_leads', JSON.stringify(updated));
     setLeadsCount(updated.length);
+    localStorage.setItem('sanam_leads_count', updated.length.toString());
   };
 
   const deleteCalcInquiry = (id: string) => {
@@ -508,6 +509,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCalcInquiries(updated);
     localStorage.setItem('sanam_calc_inquiries', JSON.stringify(updated));
     setCalcCount(updated.length);
+    localStorage.setItem('sanam_calc_count', updated.length.toString());
   };
 
   // Feedback
