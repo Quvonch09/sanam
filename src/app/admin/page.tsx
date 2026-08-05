@@ -51,6 +51,8 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
     feedbacks,
     updateLeadStatus,
     updateCalcStatus,
+    deleteLead,
+    deleteCalcInquiry,
     toggleApproveFeedback,
     deleteFeedback,
   } = useApp();
@@ -951,38 +953,72 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   <p className="text-sm text-slate-400">Hali arizalar yo'q</p>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {leads.map(lead => (
-                    <div key={lead.id} className={`border rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
-                      <div className="flex items-start gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-[#1E1A5B] text-[#FFC107] flex items-center justify-center font-black text-sm flex-shrink-0">
-                          {lead.name.charAt(0)}
-                        </div>
-                        <div className="space-y-0.5">
-                          <p className={`text-sm font-extrabold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{lead.name}</p>
-                          <p className="text-xs text-slate-400">{lead.phone}</p>
-                          <p className="text-[10px] font-bold text-[#FFC107] bg-[#FFC107]/10 px-2 py-0.5 rounded-md inline-block">{lead.service}</p>
-                          {lead.message && <p className="text-[10px] text-slate-400 mt-1 max-w-xs">{lead.message}</p>}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[10px] text-slate-500 font-mono">{lead.date}</span>
-                        <select
-                          value={lead.status}
-                          onChange={e => updateLeadStatus(lead.id, e.target.value as any)}
-                          className={`text-[10px] font-bold px-2.5 py-1.5 rounded-xl border cursor-pointer outline-none ${
-                            lead.status === 'new' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' :
-                            lead.status === 'contacted' ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' :
-                            'bg-slate-500/10 border-slate-500/30 text-slate-400'
-                          }`}
-                        >
-                          <option value="new">🟢 Yangi</option>
-                          <option value="contacted">🔵 Bog'landi</option>
-                          <option value="completed">✅ Bajarildi</option>
-                        </select>
-                      </div>
-                    </div>
-                  ))}
+                <div className={`overflow-x-auto border rounded-2xl ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+                  <table className="w-full text-left border-collapse min-w-[700px]">
+                    <thead>
+                      <tr className={`border-b text-[10px] font-extrabold uppercase tracking-wider ${isDarkMode ? 'bg-slate-950/40 border-slate-800 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
+                        <th className="py-3.5 px-4 font-black">Mijoz</th>
+                        <th className="py-3.5 px-4 font-black">Telefon</th>
+                        <th className="py-3.5 px-4 font-black">Xizmat</th>
+                        <th className="py-3.5 px-4 font-black">Xabar</th>
+                        <th className="py-3.5 px-4 font-black">Sana</th>
+                        <th className="py-3.5 px-4 font-black">Status</th>
+                        <th className="py-3.5 px-4 font-black text-right">Amallar</th>
+                      </tr>
+                    </thead>
+                    <tbody className={`divide-y text-xs font-medium ${isDarkMode ? 'divide-slate-800 text-slate-300' : 'divide-slate-200 text-slate-700'}`}>
+                      {leads.map(lead => (
+                        <tr key={lead.id} className={`hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-colors`}>
+                          <td className="py-3 px-4 font-bold">
+                            <div className="flex items-center gap-3">
+                              <div className="w-7 h-7 rounded-lg bg-[#1E1A5B] text-[#FFC107] flex items-center justify-center font-black text-xs flex-shrink-0">
+                                {lead.name.charAt(0)}
+                              </div>
+                              <span className={isDarkMode ? 'text-white' : 'text-slate-900'}>{lead.name}</span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 font-semibold">{lead.phone}</td>
+                          <td className="py-3 px-4">
+                            <span className="text-[10px] font-bold text-[#FFC107] bg-[#FFC107]/10 px-2 py-0.5 rounded-md">
+                              {lead.service}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 max-w-[200px] truncate" title={lead.message || ''}>
+                            {lead.message || <span className="text-slate-500 font-normal italic">- bo'sh -</span>}
+                          </td>
+                          <td className="py-3 px-4 text-slate-400 font-mono text-[10px]">{lead.date}</td>
+                          <td className="py-3 px-4">
+                            <select
+                              value={lead.status}
+                              onChange={e => updateLeadStatus(lead.id, e.target.value as any)}
+                              className={`text-[10px] font-bold px-2 py-1 rounded-lg border cursor-pointer outline-none ${
+                                lead.status === 'new' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' :
+                                lead.status === 'contacted' ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' :
+                                'bg-slate-500/10 border-slate-500/30 text-slate-400'
+                              }`}
+                            >
+                              <option value="new">🟢 Yangi</option>
+                              <option value="contacted">🔵 Bog'landi</option>
+                              <option value="completed">✅ Bajarildi</option>
+                            </select>
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <button
+                              onClick={() => {
+                                if (confirm('Haqiqatan ham ushbu arizani o\'chirmoqchimisiz?')) {
+                                  deleteLead(lead.id);
+                                }
+                              }}
+                              className="p-1.5 hover:bg-red-500/10 rounded-lg group transition-colors inline-block"
+                              title="O'chirish"
+                            >
+                              <Trash className="w-4 h-4 text-red-500 group-hover:text-red-600" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
@@ -999,35 +1035,68 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   <p className="text-sm text-slate-400">Hali smeta so'rovlari yo'q</p>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {calcInquiries.map(calc => (
-                    <div key={calc.id} className={`border rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
-                      <div className="space-y-1">
-                        <p className={`text-sm font-extrabold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{calc.productType}</p>
-                        <div className="flex items-center gap-3 text-[10px] text-slate-400 font-medium">
-                          <span>📦 {calc.quantity} dona</span>
-                          <span>⏱ ~{calc.estimatedDays} kun</span>
-                          <span>📞 {calc.phone}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-slate-500 font-mono">{calc.date}</span>
-                        <select
-                          value={calc.status}
-                          onChange={e => updateCalcStatus(calc.id, e.target.value as any)}
-                          className={`text-[10px] font-bold px-2.5 py-1.5 rounded-xl border cursor-pointer outline-none ${
-                            calc.status === 'new' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' :
-                            calc.status === 'contacted' ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' :
-                            'bg-slate-500/10 border-slate-500/30 text-slate-400'
-                          }`}
-                        >
-                          <option value="new">🟢 Yangi</option>
-                          <option value="contacted">🔵 Bog'landi</option>
-                          <option value="completed">✅ Bajarildi</option>
-                        </select>
-                      </div>
-                    </div>
-                  ))}
+                <div className={`overflow-x-auto border rounded-2xl ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+                  <table className="w-full text-left border-collapse min-w-[700px]">
+                    <thead>
+                      <tr className={`border-b text-[10px] font-extrabold uppercase tracking-wider ${isDarkMode ? 'bg-slate-950/40 border-slate-800 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
+                        <th className="py-3.5 px-4 font-black">Mahsulot turi</th>
+                        <th className="py-3.5 px-4 font-black">Miqdori</th>
+                        <th className="py-3.5 px-4 font-black">Muddat</th>
+                        <th className="py-3.5 px-4 font-black">Telefon</th>
+                        <th className="py-3.5 px-4 font-black">Sana</th>
+                        <th className="py-3.5 px-4 font-black">Status</th>
+                        <th className="py-3.5 px-4 font-black text-right">Amallar</th>
+                      </tr>
+                    </thead>
+                    <tbody className={`divide-y text-xs font-medium ${isDarkMode ? 'divide-slate-800 text-slate-300' : 'divide-slate-200 text-slate-700'}`}>
+                      {calcInquiries.map(calc => (
+                        <tr key={calc.id} className={`hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-colors`}>
+                          <td className="py-3 px-4 font-bold text-slate-900 dark:text-white">
+                            <div className="flex items-center gap-2.5">
+                              <span className="text-sm">🧮</span>
+                              <span>{calc.productType}</span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 font-semibold">
+                            <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                              📦 {calc.quantity} dona
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 font-semibold text-amber-500">⏱ ~{calc.estimatedDays} kun</td>
+                          <td className="py-3 px-4 font-semibold">{calc.phone}</td>
+                          <td className="py-3 px-4 text-slate-400 font-mono text-[10px]">{calc.date}</td>
+                          <td className="py-3 px-4">
+                            <select
+                              value={calc.status}
+                              onChange={e => updateCalcStatus(calc.id, e.target.value as any)}
+                              className={`text-[10px] font-bold px-2 py-1 rounded-lg border cursor-pointer outline-none ${
+                                calc.status === 'new' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' :
+                                calc.status === 'contacted' ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' :
+                                'bg-slate-500/10 border-slate-500/30 text-slate-400'
+                              }`}
+                            >
+                              <option value="new">🟢 Yangi</option>
+                              <option value="contacted">🔵 Bog'landi</option>
+                              <option value="completed">✅ Bajarildi</option>
+                            </select>
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <button
+                              onClick={() => {
+                                if (confirm('Haqiqatan ham ushbu smeta so\'rovini o\'chirmoqchimisiz?')) {
+                                  deleteCalcInquiry(calc.id);
+                                }
+                              }}
+                              className="p-1.5 hover:bg-red-500/10 rounded-lg group transition-colors inline-block"
+                              title="O'chirish"
+                            >
+                              <Trash className="w-4 h-4 text-red-500 group-hover:text-red-600" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
