@@ -76,6 +76,19 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(null);
 
+  // Custom Delete Confirmation Modal State
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    isOpen: boolean;
+    type: 'lead' | 'calc' | null;
+    id: string | null;
+    title: string;
+  }>({
+    isOpen: false,
+    type: null,
+    id: null,
+    title: '',
+  });
+
   // Form States - Product
   const [prodModel, setProdModel] = useState('');
   const [prodName, setProdName] = useState('');
@@ -1005,9 +1018,12 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                           <td className="py-3 px-4 text-right">
                             <button
                               onClick={() => {
-                                if (confirm('Haqiqatan ham ushbu arizani o\'chirmoqchimisiz?')) {
-                                  deleteLead(lead.id);
-                                }
+                                setDeleteConfirm({
+                                  isOpen: true,
+                                  type: 'lead',
+                                  id: lead.id,
+                                  title: lead.name,
+                                });
                               }}
                               className="p-1.5 hover:bg-red-500/10 rounded-lg group transition-colors inline-block"
                               title="O'chirish"
@@ -1083,9 +1099,12 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                           <td className="py-3 px-4 text-right">
                             <button
                               onClick={() => {
-                                if (confirm('Haqiqatan ham ushbu smeta so\'rovini o\'chirmoqchimisiz?')) {
-                                  deleteCalcInquiry(calc.id);
-                                }
+                                setDeleteConfirm({
+                                  isOpen: true,
+                                  type: 'calc',
+                                  id: calc.id,
+                                  title: calc.productType,
+                                });
                               }}
                               className="p-1.5 hover:bg-red-500/10 rounded-lg group transition-colors inline-block"
                               title="O'chirish"
@@ -1357,6 +1376,50 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 <button type="button" onClick={() => setShowNewsModal(false)} className="px-5 py-3 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl">{tAdmin.actions.close}</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* CUSTOM CONFIRM DELETE MODAL */}
+      {deleteConfirm.isOpen && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className={`w-full max-w-sm rounded-3xl p-6 text-center space-y-6 border shadow-2xl animate-in zoom-in-95 duration-200 ${
+            isDarkMode ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'
+          }`}>
+            <div className="mx-auto w-12 h-12 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center text-xl">
+              ⚠️
+            </div>
+            <div className="space-y-2">
+              <h4 className="text-base font-black">O'chirishni tasdiqlaysizmi?</h4>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Siz haqiqatan ham <strong className={isDarkMode ? 'text-white' : 'text-slate-900'}>{deleteConfirm.title}</strong> ni o'chirmoqchimisiz? Ushbu amalni ortga qaytarib bo'lmaydi.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteConfirm({ isOpen: false, type: null, id: null, title: '' })}
+                className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-colors border ${
+                  isDarkMode 
+                    ? 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700' 
+                    : 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200'
+                }`}
+              >
+                Bekor qilish
+              </button>
+              <button
+                onClick={() => {
+                  if (deleteConfirm.type === 'lead' && deleteConfirm.id) {
+                    deleteLead(deleteConfirm.id);
+                  } else if (deleteConfirm.type === 'calc' && deleteConfirm.id) {
+                    deleteCalcInquiry(deleteConfirm.id);
+                  }
+                  setDeleteConfirm({ isOpen: false, type: null, id: null, title: '' });
+                }}
+                className="flex-1 py-2.5 text-xs font-bold rounded-xl bg-red-500 hover:bg-red-600 text-white transition-colors shadow-lg shadow-red-500/10"
+              >
+                O'chirish
+              </button>
+            </div>
           </div>
         </div>
       )}

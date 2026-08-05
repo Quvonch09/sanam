@@ -415,7 +415,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       date: new Date().toISOString().split('T')[0],
       status: 'new',
     };
-    const updated = [newItem, ...leads];
+    
+    let latest: LeadItem[] = [];
+    try {
+      const stored = localStorage.getItem('sanam_leads');
+      if (stored) latest = JSON.parse(stored);
+    } catch (e) {
+      latest = leads;
+    }
+
+    const updated = [newItem, ...latest];
     setLeads(updated);
     localStorage.setItem('sanam_leads', JSON.stringify(updated));
     incrementLeads();
@@ -428,33 +437,74 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       date: new Date().toISOString().split('T')[0],
       status: 'new',
     };
-    const updated = [newItem, ...calcInquiries];
+    
+    let latest: CalcInquiry[] = [];
+    try {
+      const stored = localStorage.getItem('sanam_calc_inquiries');
+      if (stored) latest = JSON.parse(stored);
+    } catch (e) {
+      latest = calcInquiries;
+    }
+
+    const updated = [newItem, ...latest];
     setCalcInquiries(updated);
     localStorage.setItem('sanam_calc_inquiries', JSON.stringify(updated));
     incrementCalc();
   };
 
   const updateLeadStatus = (id: string, status: LeadItem['status']) => {
-    const updated = leads.map((l) => (l.id === id ? { ...l, status } : l));
+    let latest: LeadItem[] = [];
+    try {
+      const stored = localStorage.getItem('sanam_leads');
+      if (stored) latest = JSON.parse(stored);
+    } catch (e) {
+      latest = leads;
+    }
+
+    const updated = latest.map((l) => (l.id === id ? { ...l, status } : l));
     setLeads(updated);
     localStorage.setItem('sanam_leads', JSON.stringify(updated));
   };
 
   const updateCalcStatus = (id: string, status: CalcInquiry['status']) => {
-    const updated = calcInquiries.map((c) => (c.id === id ? { ...c, status } : c));
+    let latest: CalcInquiry[] = [];
+    try {
+      const stored = localStorage.getItem('sanam_calc_inquiries');
+      if (stored) latest = JSON.parse(stored);
+    } catch (e) {
+      latest = calcInquiries;
+    }
+
+    const updated = latest.map((c) => (c.id === id ? { ...c, status } : c));
     setCalcInquiries(updated);
     localStorage.setItem('sanam_calc_inquiries', JSON.stringify(updated));
   };
 
   const deleteLead = (id: string) => {
-    const updated = leads.filter((l) => l.id !== id);
+    let latest: LeadItem[] = [];
+    try {
+      const stored = localStorage.getItem('sanam_leads');
+      if (stored) latest = JSON.parse(stored);
+    } catch (e) {
+      latest = leads;
+    }
+
+    const updated = latest.filter((l) => l.id !== id);
     setLeads(updated);
     localStorage.setItem('sanam_leads', JSON.stringify(updated));
     setLeadsCount(updated.length);
   };
 
   const deleteCalcInquiry = (id: string) => {
-    const updated = calcInquiries.filter((c) => c.id !== id);
+    let latest: CalcInquiry[] = [];
+    try {
+      const stored = localStorage.getItem('sanam_calc_inquiries');
+      if (stored) latest = JSON.parse(stored);
+    } catch (e) {
+      latest = calcInquiries;
+    }
+
+    const updated = latest.filter((c) => c.id !== id);
     setCalcInquiries(updated);
     localStorage.setItem('sanam_calc_inquiries', JSON.stringify(updated));
     setCalcCount(updated.length);
