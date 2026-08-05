@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Language } from '../data/translations';
 import { CategoryItem, ProductItem, initialCategories, initialProducts } from '@/data/products';
-import { supabase } from '@/utils/supabaseClient';
 
 export type { CategoryItem, ProductItem };
 
@@ -195,26 +194,6 @@ const initialFeedbacks: FeedbackItem[] = [
   },
 ];
 
-const mapLead = (raw: any): LeadItem => ({
-  id: raw.id,
-  name: raw.name,
-  phone: raw.phone,
-  service: raw.service,
-  message: raw.message || '',
-  date: raw.date,
-  status: raw.status,
-});
-
-const mapCalcInquiry = (raw: any): CalcInquiry => ({
-  id: raw.id,
-  productType: raw.product_type || raw.productType,
-  quantity: raw.quantity,
-  estimatedDays: raw.estimated_days || raw.estimatedDays,
-  phone: raw.phone,
-  date: raw.date,
-  status: raw.status,
-});
-
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const [currentLang, setCurrentLangState] = useState<Language>('uz');
@@ -282,105 +261,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, []);
 
-  // Load from Supabase if client is active and subscribe to real-time changes
+  // Real-time tab sync using the window storage event listener
   useEffect(() => {
-    const client = supabase;
-    if (!client) return;
-
-    // Fetch initial leads & calc inquiries
-    const fetchSupabaseData = async () => {
-      try {
-        const { data: leadsData, error: leadsErr } = await client
-          .from('leads')
-          .select('*')
-          .order('created_at', { ascending: false });
-        if (leadsData) {
-          const mapped = leadsData.map(mapLead);
-          setLeads(mapped);
-          setLeadsCount(mapped.length);
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'sanam_leads' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          setLeads(parsed);
+          setLeadsCount(parsed.length);
+        } catch (err) {
+          console.error('Error parsing synced leads:', err);
         }
-        if (leadsErr) console.error('Error fetching leads:', leadsErr);
-
-        const { data: calcData, error: calcErr } = await client
-          .from('calc_inquiries')
-          .select('*')
-          .order('created_at', { ascending: false });
-        if (calcData) {
-          const mapped = calcData.map(mapCalcInquiry);
-          setCalcInquiries(mapped);
-          setCalcCount(mapped.length);
+      }
+      if (e.key === 'sanam_calc_inquiries' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          setCalcInquiries(parsed);
+          setCalcCount(parsed.length);
+        } catch (err) {
+          console.error('Error parsing synced calc inquiries:', err);
         }
-        if (calcErr) console.error('Error fetching calc inquiries:', calcErr);
-      } catch (err) {
-        console.error('Supabase fetch error:', err);
       }
     };
 
-    fetchSupabaseData();
-
-    // Subscribe to Leads Realtime changes
-    const leadsChannel = client
-      .channel('public:leads')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'leads' },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            setLeads((prev) => {
-              const item = mapLead(payload.new);
-              if (prev.some((x) => x.id === item.id)) return prev;
-              const updated = [item, ...prev];
-              setLeadsCount(updated.length);
-              return updated;
-            });
-          } else if (payload.eventType === 'UPDATE') {
-            setLeads((prev) =>
-              prev.map((x) => (x.id === payload.new.id ? mapLead(payload.new) : x))
-            );
-          } else if (payload.eventType === 'DELETE') {
-            setLeads((prev) => {
-              const updated = prev.filter((x) => x.id !== payload.old.id);
-              setLeadsCount(updated.length);
-              return updated;
-            });
-          }
-        }
-      )
-      .subscribe();
-
-    // Subscribe to CalcInquiries Realtime changes
-    const calcChannel = client
-      .channel('public:calc_inquiries')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'calc_inquiries' },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            setCalcInquiries((prev) => {
-              const item = mapCalcInquiry(payload.new);
-              if (prev.some((x) => x.id === item.id)) return prev;
-              const updated = [item, ...prev];
-              setCalcCount(updated.length);
-              return updated;
-            });
-          } else if (payload.eventType === 'UPDATE') {
-            setCalcInquiries((prev) =>
-              prev.map((x) => (x.id === payload.new.id ? mapCalcInquiry(payload.new) : x))
-            );
-          } else if (payload.eventType === 'DELETE') {
-            setCalcInquiries((prev) => {
-              const updated = prev.filter((x) => x.id !== payload.old.id);
-              setCalcCount(updated.length);
-              return updated;
-            });
-          }
-        }
-      )
-      .subscribe();
-
+    window.addEventListener('storage', handleStorageChange);
     return () => {
-      client.removeChannel(leadsChannel);
-      client.removeChannel(calcChannel);
+      window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
 
@@ -502,110 +408,52 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Leads & Inquiries
-  const addLead = async (lead: Omit<LeadItem, 'id' | 'date' | 'status'>) => {
-    const newItem = {
-      name: lead.name,
-      phone: lead.phone,
-      service: lead.service,
-      message: lead.message,
-      status: 'new' as const,
+  const addLead = (lead: Omit<LeadItem, 'id' | 'date' | 'status'>) => {
+    const newItem: LeadItem = {
+      ...lead,
+      id: 'lead-' + Date.now(),
       date: new Date().toISOString().split('T')[0],
+      status: 'new',
     };
-
-    if (supabase) {
-      const { error } = await supabase.from('leads').insert([newItem]);
-      if (error) console.error('Error inserting lead:', error);
-    } else {
-      const localItem: LeadItem = {
-        ...newItem,
-        id: 'lead-' + Date.now(),
-      };
-      const updated = [localItem, ...leads];
-      setLeads(updated);
-      localStorage.setItem('sanam_leads', JSON.stringify(updated));
-      incrementLeads();
-    }
+    const updated = [newItem, ...leads];
+    setLeads(updated);
+    localStorage.setItem('sanam_leads', JSON.stringify(updated));
+    incrementLeads();
   };
 
-  const addCalcInquiry = async (inquiry: Omit<CalcInquiry, 'id' | 'date' | 'status'>) => {
-    const newItem = {
-      product_type: inquiry.productType,
-      quantity: inquiry.quantity,
-      estimated_days: inquiry.estimatedDays,
-      phone: inquiry.phone,
-      status: 'new' as const,
+  const addCalcInquiry = (inquiry: Omit<CalcInquiry, 'id' | 'date' | 'status'>) => {
+    const newItem: CalcInquiry = {
+      ...inquiry,
+      id: 'calc-' + Date.now(),
       date: new Date().toISOString().split('T')[0],
+      status: 'new',
     };
-
-    if (supabase) {
-      const { error } = await supabase.from('calc_inquiries').insert([newItem]);
-      if (error) console.error('Error inserting calc inquiry:', error);
-    } else {
-      const localItem: CalcInquiry = {
-        ...inquiry,
-        id: 'calc-' + Date.now(),
-        status: 'new',
-        date: new Date().toISOString().split('T')[0],
-      };
-      const updated = [localItem, ...calcInquiries];
-      setCalcInquiries(updated);
-      localStorage.setItem('sanam_calc_inquiries', JSON.stringify(updated));
-      incrementCalc();
-    }
+    const updated = [newItem, ...calcInquiries];
+    setCalcInquiries(updated);
+    localStorage.setItem('sanam_calc_inquiries', JSON.stringify(updated));
+    incrementCalc();
   };
 
-  const updateLeadStatus = async (id: string, status: LeadItem['status']) => {
-    if (supabase) {
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-      if (isUuid) {
-        const { error } = await supabase.from('leads').update({ status }).eq('id', id);
-        if (error) console.error('Error updating lead status:', error);
-        return;
-      }
-    }
+  const updateLeadStatus = (id: string, status: LeadItem['status']) => {
     const updated = leads.map((l) => (l.id === id ? { ...l, status } : l));
     setLeads(updated);
     localStorage.setItem('sanam_leads', JSON.stringify(updated));
   };
 
-  const updateCalcStatus = async (id: string, status: CalcInquiry['status']) => {
-    if (supabase) {
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-      if (isUuid) {
-        const { error } = await supabase.from('calc_inquiries').update({ status }).eq('id', id);
-        if (error) console.error('Error updating calc status:', error);
-        return;
-      }
-    }
+  const updateCalcStatus = (id: string, status: CalcInquiry['status']) => {
     const updated = calcInquiries.map((c) => (c.id === id ? { ...c, status } : c));
     setCalcInquiries(updated);
     localStorage.setItem('sanam_calc_inquiries', JSON.stringify(updated));
   };
 
-  const deleteLead = async (id: string) => {
-    if (supabase) {
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-      if (isUuid) {
-        const { error } = await supabase.from('leads').delete().eq('id', id);
-        if (error) console.error('Error deleting lead:', error);
-        return;
-      }
-    }
+  const deleteLead = (id: string) => {
     const updated = leads.filter((l) => l.id !== id);
     setLeads(updated);
     localStorage.setItem('sanam_leads', JSON.stringify(updated));
     setLeadsCount(updated.length);
   };
 
-  const deleteCalcInquiry = async (id: string) => {
-    if (supabase) {
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-      if (isUuid) {
-        const { error } = await supabase.from('calc_inquiries').delete().eq('id', id);
-        if (error) console.error('Error deleting calc inquiry:', error);
-        return;
-      }
-    }
+  const deleteCalcInquiry = (id: string) => {
     const updated = calcInquiries.filter((c) => c.id !== id);
     setCalcInquiries(updated);
     localStorage.setItem('sanam_calc_inquiries', JSON.stringify(updated));
