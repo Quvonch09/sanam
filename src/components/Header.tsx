@@ -23,8 +23,15 @@ export const Header: React.FC<HeaderProps> = ({
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+  const [isSubPage, setIsSubPage] = useState(false);
 
   const t = translations[currentLang].nav;
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsSubPage(window.location.pathname !== '/' && window.location.pathname !== '');
+    }
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -36,13 +43,13 @@ export const Header: React.FC<HeaderProps> = ({
 
   // Removed "Bosh sahifa" link as requested
   const navLinks = [
-    { href: "#about", label: t.about },
-    { href: "#products", label: t.products },
-    { href: "#team", label: t.team },
-    { href: "#news", label: t.news },
-    { href: "#why-us", label: t.whyUs },
-    { href: "#testimonials", label: t.testimonials },
-    { href: "#contact", label: t.contact },
+    { href: isSubPage ? "/#about" : "#about", label: t.about },
+    { href: isSubPage ? "/#products" : "#products", label: t.products },
+    { href: isSubPage ? "/#team" : "#team", label: t.team },
+    { href: isSubPage ? "/#news" : "#news", label: t.news },
+    { href: isSubPage ? "/#why-us" : "#why-us", label: t.whyUs },
+    { href: isSubPage ? "/#testimonials" : "#testimonials", label: t.testimonials },
+    { href: isSubPage ? "/#contact" : "#contact", label: t.contact },
   ];
 
   const languages: { code: Language; name: string; flag: string }[] = [
@@ -66,7 +73,7 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 flex items-center justify-between gap-1 sm:gap-2">
         
         {/* Logo */}
-        <a href="#hero" className="focus:outline-none flex-shrink-0">
+        <a href={isSubPage ? "/" : "#hero"} className="focus:outline-none flex-shrink-0">
           <SanamLogo size="md" isDarkMode={isDarkMode} />
         </a>
 
@@ -147,7 +154,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           <a
-            href="#contact"
+            href={isSubPage ? "/#contact" : "#contact"}
             onClick={onOpenContact}
             className="flex items-center gap-1.5 px-3 py-2 text-xs font-extrabold text-white bg-[#1E1A5B] hover:bg-[#13103D] rounded-xl shadow-md transition-all whitespace-nowrap"
           >

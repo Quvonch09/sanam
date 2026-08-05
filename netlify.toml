@@ -5,3 +5,9 @@
 [build.environment]
   NODE_VERSION = "20"
   CI = "false"
+
+[[redirects]]
+  from = "/product/*"
+  to = "/product"
+  status = 200
+

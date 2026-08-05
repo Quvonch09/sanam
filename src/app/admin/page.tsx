@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { AppProvider, useApp, ProductItem, NewsItem, TeamMember, CategoryItem } from '@/context/AppContext';
 import { SanamLogo } from '@/components/SanamLogo';
 import { Language, translations } from '@/data/translations';
+import { slugify } from '@/utils/slugify';
+
 import {
   Globe,
   Sun,
@@ -98,6 +100,17 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
   // Form States - Category
   const [catLabel, setCatLabel] = useState('');
   const [catKey, setCatKey] = useState('');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const handleCopyLink = (pName: string, pId: string) => {
+    if (typeof window !== 'undefined') {
+      const fullUrl = `${window.location.origin}/product/${slugify(pName)}`;
+      navigator.clipboard.writeText(fullUrl).then(() => {
+        setCopiedId(pId);
+        setTimeout(() => setCopiedId(null), 2000);
+      });
+    }
+  };
 
   const languages: { code: Language; name: string; flag: string }[] = [
     { code: 'uz', name: "O'zbekcha", flag: "🇺🇿" },
@@ -713,6 +726,22 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       <div><span className="text-slate-400">{tAdmin.form.sizes}:</span> {p.sizes}</div>
                       <div><span className="text-slate-400">{tAdmin.form.material}:</span> {p.material}</div>
                       <div className="text-[#FFC107] font-bold"><span className="text-slate-400">{tAdmin.form.price}:</span> {p.price}</div>
+                      
+                      {/* Shareable Link */}
+                      <div className="pt-2 mt-2 border-t border-slate-800/10 dark:border-slate-800/40 space-y-1">
+                        <span className="text-[9px] text-slate-500 uppercase font-bold tracking-wider block">GMC uchun havola:</span>
+                        <div className="flex items-center justify-between gap-1 bg-slate-950/20 dark:bg-slate-950/60 p-1.5 rounded-lg border border-slate-800/20">
+                          <span className="truncate select-all text-[10px] font-mono text-slate-400 max-w-[120px] sm:max-w-[150px]">
+                            {typeof window !== 'undefined' ? `${window.location.origin}/product/${slugify(p.name)}` : `/product/${slugify(p.name)}`}
+                          </span>
+                          <button
+                            onClick={() => handleCopyLink(p.name, p.id)}
+                            className="text-[10px] font-bold text-[#FFC107] hover:underline"
+                          >
+                            {copiedId === p.id ? '✓ OK' : '📋'}
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
