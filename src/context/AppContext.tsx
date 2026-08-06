@@ -264,23 +264,46 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Real-time tab sync using the window storage event listener
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'sanam_leads' && e.newValue) {
-        try {
+      if (e.newValue === null) return;
+      try {
+        if (e.key === 'sanam_team') {
+          const parsedTeam = JSON.parse(e.newValue).filter(
+            (member: any) => !['team-1', 'team-2', 'team-3', 'team-4', 'team-5', 'team-6'].includes(member.id)
+          );
+          setTeamList(parsedTeam);
+        }
+        if (e.key === 'sanam_products_v3') {
+          setProducts(JSON.parse(e.newValue));
+        }
+        if (e.key === 'sanam_news') {
+          setNewsList(JSON.parse(e.newValue));
+        }
+        if (e.key === 'sanam_categories') {
+          setCategories(JSON.parse(e.newValue));
+        }
+        if (e.key === 'sanam_feedbacks') {
+          setFeedbacks(JSON.parse(e.newValue));
+        }
+        if (e.key === 'sanam_theme') {
+          setIsDarkMode(e.newValue === 'dark');
+        }
+        if (e.key === 'sanam_lang') {
+          if (['uz', 'ru', 'en'].includes(e.newValue)) {
+            setCurrentLangState(e.newValue as Language);
+          }
+        }
+        if (e.key === 'sanam_leads') {
           const parsed = JSON.parse(e.newValue);
           setLeads(parsed);
           setLeadsCount(parsed.length);
-        } catch (err) {
-          console.error('Error parsing synced leads:', err);
         }
-      }
-      if (e.key === 'sanam_calc_inquiries' && e.newValue) {
-        try {
+        if (e.key === 'sanam_calc_inquiries') {
           const parsed = JSON.parse(e.newValue);
           setCalcInquiries(parsed);
           setCalcCount(parsed.length);
-        } catch (err) {
-          console.error('Error parsing synced calc inquiries:', err);
         }
+      } catch (err) {
+        console.error(`Error parsing synced key ${e.key}:`, err);
       }
     };
 
