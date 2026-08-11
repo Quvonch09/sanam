@@ -10,6 +10,146 @@ interface ProductionGalleryProps {
   onOpenCalculator: () => void;
 }
 
+const ProductCardImage: React.FC<{
+  item: ProductItem;
+  getCardIcon: (category: string) => React.ReactNode;
+  onZoom: () => void;
+  getTranslatedBadge: (badge?: string) => string;
+}> = ({ item, getCardIcon, onZoom, getTranslatedBadge }) => {
+  const images = item.images && item.images.length > 0 ? item.images : (item.imageUrl ? [item.imageUrl] : []);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const handlePrev = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActiveIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+  };
+
+  const handleNext = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActiveIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+  };
+
+  const handleDotClick = (e: React.MouseEvent, index: number) => {
+    e.stopPropagation();
+    setActiveIndex(index);
+  };
+
+  const currentImage = images[activeIndex];
+
+  return (
+    <div className="relative h-56 bg-gradient-to-br from-[#1E1A5B] to-[#13103D] p-5 flex flex-col justify-between overflow-hidden group/carousel">
+      {currentImage ? (
+        <img
+          src={currentImage}
+          alt={item.name}
+          className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+        />
+      ) : (
+        <>
+          <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#FFC107_1px,transparent_1px)] [background-size:16px_16px]" />
+          <div className="relative z-10 flex items-center justify-center my-auto">
+            <div className="p-4 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-md group-hover:scale-110 transition-transform duration-300">
+              {getCardIcon(item.category)}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Badges and actions overlays */}
+      <div className="relative z-10 flex items-center justify-between w-full">
+        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#1E1A5B] bg-[#FFC107] px-2.5 py-1 rounded-md shadow">
+          {getTranslatedBadge(item.badge)}
+        </span>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onZoom();
+          }}
+          className="w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center text-white backdrop-blur-md transition-colors"
+        >
+          <Eye className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Carousel navigation controls (Only show if images.length > 1) */}
+      {images.length > 1 && (
+        <>
+          {/* Left Arrow */}
+          <button
+            onClick={handlePrev}
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/55 hover:bg-[#FFC107] hover:text-[#1E1A5B] text-white flex items-center justify-center transition-all opacity-0 group-hover/carousel:opacity-100 z-20 shadow-md text-lg font-bold pb-0.5"
+          >
+            ‹
+          </button>
+          {/* Right Arrow */}
+          <button
+            onClick={handleNext}
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/55 hover:bg-[#FFC107] hover:text-[#1E1A5B] text-white flex items-center justify-center transition-all opacity-0 group-hover/carousel:opacity-100 z-20 shadow-md text-lg font-bold pb-0.5"
+          >
+            ›
+          </button>
+
+          {/* Dots Indicator Overlay */}
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20 bg-black/30 backdrop-blur-sm px-2.5 py-1 rounded-full">
+            {images.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={(e) => handleDotClick(e, idx)}
+                className={`w-1.5 h-1.5 rounded-full transition-all ${
+                  activeIndex === idx ? 'bg-[#FFC107] w-3' : 'bg-white/60 hover:bg-white'
+                }`}
+              />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+const ProductModalCarousel: React.FC<{ images: string[]; alt: string }> = ({ images, alt }) => {
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  return (
+    <div className="relative w-full h-56 bg-slate-950">
+      <img
+        src={images[activeIndex]}
+        alt={alt}
+        className="w-full h-full object-cover"
+      />
+      {images.length > 1 && (
+        <>
+          <button
+            type="button"
+            onClick={() => setActiveIndex(prev => (prev === 0 ? images.length - 1 : prev - 1))}
+            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 hover:bg-[#FFC107] hover:text-[#1E1A5B] text-white flex items-center justify-center text-lg font-bold pb-0.5"
+          >
+            ‹
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveIndex(prev => (prev === images.length - 1 ? 0 : prev + 1))}
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 hover:bg-[#FFC107] hover:text-[#1E1A5B] text-white flex items-center justify-center text-lg font-bold pb-0.5"
+          >
+            ›
+          </button>
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-10 bg-black/40 px-2 py-0.5 rounded-full">
+            {images.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setActiveIndex(idx)}
+                className={`w-1.5 h-1.5 rounded-full transition-all ${
+                  activeIndex === idx ? 'bg-[#FFC107] w-3' : 'bg-white/55 hover:bg-white'
+                }`}
+              />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
 export const ProductionGallery: React.FC<ProductionGalleryProps> = ({
   currentLang,
   onOpenCalculator,
@@ -115,37 +255,13 @@ export const ProductionGallery: React.FC<ProductionGalleryProps> = ({
                   : 'bg-white border-slate-200 shadow-sm hover:shadow-xl'
               }`}
             >
-              {/* Card Banner / Image Display */}
-              <div className="relative h-56 bg-gradient-to-br from-[#1E1A5B] to-[#13103D] p-5 flex flex-col justify-between overflow-hidden">
-                {item.imageUrl ? (
-                  <img
-                    src={item.imageUrl}
-                    alt={item.name}
-                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                ) : (
-                  <>
-                    <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#FFC107_1px,transparent_1px)] [background-size:16px_16px]" />
-                    <div className="relative z-10 flex items-center justify-center my-auto">
-                      <div className="p-4 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-md group-hover:scale-110 transition-transform duration-300">
-                        {getCardIcon(item.category)}
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                <div className="relative z-10 flex items-center justify-between">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#1E1A5B] bg-[#FFC107] px-2.5 py-1 rounded-md shadow">
-                    {getTranslatedBadge(item.badge)}
-                  </span>
-                  <button
-                    onClick={() => setSelectedImage(item)}
-                    className="w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center text-white backdrop-blur-md transition-colors"
-                  >
-                    <Eye className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
+              {/* Card Banner / Image Display Carousel */}
+              <ProductCardImage
+                item={item}
+                getCardIcon={getCardIcon}
+                onZoom={() => setSelectedImage(item)}
+                getTranslatedBadge={getTranslatedBadge}
+              />
 
               {/* Card Product Specifications */}
               <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
@@ -224,7 +340,11 @@ export const ProductionGallery: React.FC<ProductionGalleryProps> = ({
               </button>
             </div>
 
-            {selectedImage.imageUrl ? (
+            {selectedImage.images && selectedImage.images.length > 0 ? (
+              <div className="rounded-2xl overflow-hidden border border-slate-700/50">
+                <ProductModalCarousel images={selectedImage.images} alt={selectedImage.name} />
+              </div>
+            ) : selectedImage.imageUrl ? (
               <img
                 src={selectedImage.imageUrl}
                 alt={selectedImage.name}
