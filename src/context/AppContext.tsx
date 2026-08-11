@@ -138,7 +138,7 @@ function mapProduct(row: any): ProductItem {
     id: row.id,
     name: row.name,
     category: row.category ?? '',
-    desc: row.desc ?? '',
+    desc: row.description ?? '',
     imageUrl: row.image_url ?? '',
     images: row.images ?? [],
     model: row.model ?? '',
@@ -407,7 +407,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       id: newItem.id,
       name: newItem.name,
       category: newItem.category,
-      desc: newItem.desc,
+      description: newItem.desc,
       image_url: newItem.imageUrl,
       images: newItem.images ?? [],
       model: newItem.model,
@@ -424,7 +424,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const dbFields: any = {};
     if (updatedFields.name !== undefined) dbFields.name = updatedFields.name;
     if (updatedFields.category !== undefined) dbFields.category = updatedFields.category;
-    if (updatedFields.desc !== undefined) dbFields.desc = updatedFields.desc;
+    if (updatedFields.desc !== undefined) dbFields.description = updatedFields.desc;
     if (updatedFields.imageUrl !== undefined) dbFields.image_url = updatedFields.imageUrl;
     if (updatedFields.images !== undefined) dbFields.images = updatedFields.images;
     if (updatedFields.model !== undefined) dbFields.model = updatedFields.model;

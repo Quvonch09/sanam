@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS products (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   category TEXT,
-  desc TEXT,
+  description TEXT,
   image_url TEXT,
   images JSONB DEFAULT '[]',
   model TEXT,
