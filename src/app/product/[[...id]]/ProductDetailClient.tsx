@@ -37,6 +37,14 @@ function ProductDetailContent() {
     (p) => p.id === slug || slugify(p.name) === slug || slugify(p.model) === slug
   );
 
+  const [activeImg, setActiveImg] = useState<string>('');
+
+  useEffect(() => {
+    if (product) {
+      setActiveImg(product.imageUrl || '');
+    }
+  }, [product]);
+
   const getCardIcon = (category: string) => {
     switch (category) {
       case 'workshop':
@@ -163,11 +171,11 @@ function ProductDetailContent() {
         }`}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6 sm:p-8 lg:p-12">
             {/* Left Column: Image Area */}
-            <div className="flex flex-col justify-center">
-              {product.imageUrl ? (
-                <div className="relative aspect-square rounded-2xl overflow-hidden border border-slate-700/50 shadow-inner group">
+            <div className="flex flex-col gap-4">
+              {activeImg ? (
+                <div className="relative aspect-square rounded-2xl overflow-hidden border border-slate-700/50 shadow-inner group bg-slate-950">
                   <img
-                    src={product.imageUrl}
+                    src={activeImg}
                     alt={product.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
@@ -182,6 +190,25 @@ function ProductDetailContent() {
                   {getCardIcon(product.category)}
                   <div className="text-xl font-bold text-[#FFC107]">SANAM OFFICIAL</div>
                   <span className="text-[10px] text-slate-400">PRODUCT IMAGE</span>
+                </div>
+              )}
+
+              {/* Thumbnails Gallery */}
+              {product.images && product.images.length > 1 && (
+                <div className="flex flex-wrap gap-2 pt-2 justify-center">
+                  {product.images.map((img, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setActiveImg(img)}
+                      className={`w-14 h-14 rounded-xl overflow-hidden border-2 transition-all ${
+                        activeImg === img
+                          ? 'border-[#FFC107] scale-105 shadow-md'
+                          : 'border-transparent hover:border-slate-400 opacity-70 hover:opacity-100'
+                      }`}
+                    >
+                      <img src={img} alt={`${product.name} - ${idx + 1}`} className="w-full h-full object-cover" />
+                    </button>
+                  ))}
                 </div>
               )}
             </div>

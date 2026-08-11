@@ -98,7 +98,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [prodCategory, setProdCategory] = useState('');
   const [prodDesc, setProdDesc] = useState('');
   const [prodBadge, setProdBadge] = useState('Yangi');
-  const [prodImageBase64, setProdImageBase64] = useState<string>('');
+  const [prodImages, setProdImages] = useState<string[]>([]);
 
   // Form States - Team
   const [teamName, setTeamName] = useState('');
@@ -156,7 +156,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
     setProdCategory(p.category);
     setProdDesc(p.desc);
     setProdBadge(p.badge || 'Yangi');
-    setProdImageBase64(p.imageUrl || '');
+    setProdImages(p.images || (p.imageUrl ? [p.imageUrl] : []));
     setShowProductModal(true);
   };
 
@@ -193,6 +193,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
     e.preventDefault();
     if (!prodName || !prodModel || !prodSizes || !prodMaterial || !prodPrice) return;
     const cat = prodCategory || (categories[0]?.key || 'fashion');
+    const primaryImg = prodImages[0] || '';
 
     if (editingProduct) {
       updateProduct(editingProduct.id, {
@@ -204,7 +205,8 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
         category: cat,
         desc: prodDesc,
         badge: prodBadge,
-        imageUrl: prodImageBase64 || undefined,
+        imageUrl: primaryImg || undefined,
+        images: prodImages,
       });
     } else {
       addProduct({
@@ -216,7 +218,8 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
         category: cat,
         desc: prodDesc || `${prodName} model ${prodModel}`,
         badge: prodBadge,
-        imageUrl: prodImageBase64 || undefined,
+        imageUrl: primaryImg || undefined,
+        images: prodImages,
       });
     }
 
@@ -708,7 +711,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   setProdMaterial('');
                   setProdPrice('');
                   setProdDesc('');
-                  setProdImageBase64('');
+                  setProdImages([]);
                   setShowProductModal(true);
                 }}
                 className="px-5 py-3 bg-[#FFC107] hover:bg-amber-400 text-[#1E1A5B] text-xs font-extrabold rounded-2xl shadow-lg transition-all flex items-center gap-2"
@@ -1257,9 +1260,56 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 </div>
               </div>
 
+              {/* Image Preview & Upload List */}
+              {prodImages.length > 0 && (
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold uppercase">
+                    {currentLang === 'uz' ? 'Yuklangan rasmlar' : currentLang === 'ru' ? 'Загруженные изображения' : 'Uploaded Images'} ({prodImages.length})
+                  </label>
+                  <div className="grid grid-cols-4 gap-3">
+                    {prodImages.map((img, idx) => (
+                      <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden border border-slate-800 bg-slate-950">
+                        <img src={img} alt="preview" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setProdImages(prev => prev.filter((_, i) => i !== idx));
+                          }}
+                          className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold shadow hover:bg-red-700"
+                        >
+                          ✕
+                        </button>
+                        {idx === 0 && (
+                          <span className="absolute bottom-1 left-1 bg-[#FFC107] text-[#1E1A5B] text-[8px] font-black uppercase px-1 py-0.5 rounded">
+                            {currentLang === 'uz' ? 'Asosiy' : currentLang === 'ru' ? 'Главное' : 'Main'}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div>
-                <label className="block text-xs font-bold uppercase mb-1">{tAdmin.form.imageUpload}</label>
-                <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, setProdImageBase64)} className="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-extrabold file:bg-[#FFC107] file:text-[#1E1A5B] cursor-pointer" />
+                <label className="block text-xs font-bold uppercase mb-1">
+                  {currentLang === 'uz' ? 'Yangi rasm(lar) qo\'shish' : currentLang === 'ru' ? 'Добавить новое изображение(я)' : 'Add New Image(s)'}
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || []);
+                    files.forEach(file => {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setProdImages(prev => [...prev, reader.result as string]);
+                      };
+                      reader.readAsDataURL(file);
+                    });
+                  }}
+                  className="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-extrabold file:bg-[#FFC107] file:text-[#1E1A5B] cursor-pointer"
+                />
               </div>
 
               <div className="pt-2 flex gap-3">

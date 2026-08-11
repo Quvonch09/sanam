@@ -14,6 +14,7 @@ export interface ProductItem {
   category: string;  // Category key
   desc: string;
   imageUrl?: string;
+  images?: string[];
   badge?: string;
 }
 
