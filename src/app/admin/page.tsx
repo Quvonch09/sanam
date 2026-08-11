@@ -111,6 +111,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [newsSummary, setNewsSummary] = useState('');
   const [newsContent, setNewsContent] = useState('');
   const [newsImageBase64, setNewsImageBase64] = useState<string>('');
+  const [newsVideoBase64, setNewsVideoBase64] = useState<string>('');
 
   // Form States - Category
   const [catLabel, setCatLabel] = useState('');
@@ -177,6 +178,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
     setNewsSummary(n.summary);
     setNewsContent(n.content);
     setNewsImageBase64(n.imageUrl || '');
+    setNewsVideoBase64(n.videoUrl || '');
     setShowNewsModal(true);
   };
 
@@ -260,6 +262,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
         summary: newsSummary,
         content: newsContent,
         imageUrl: newsImageBase64 || undefined,
+        videoUrl: newsVideoBase64 || undefined,
       });
     } else {
       addNews({
@@ -269,6 +272,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
         summary: newsSummary,
         content: newsContent,
         imageUrl: newsImageBase64 || undefined,
+        videoUrl: newsVideoBase64 || undefined,
       });
     }
 
@@ -910,6 +914,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   setNewsSummary('');
                   setNewsContent('');
                   setNewsImageBase64('');
+                  setNewsVideoBase64('');
                   setShowNewsModal(true);
                 }}
                 className="px-5 py-3 bg-[#FFC107] hover:bg-amber-400 text-[#1E1A5B] text-xs font-extrabold rounded-2xl shadow-lg flex items-center gap-2"
@@ -1419,6 +1424,67 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <div>
                 <label className="block text-xs font-bold uppercase mb-1">{tAdmin.form.newsContent} *</label>
                 <textarea rows={4} required value={newsContent} onChange={(e) => setNewsContent(e.target.value)} placeholder={tAdmin.form.contentPlaceholder} className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white outline-none focus:ring-2 focus:ring-[#FFC107] resize-none" />
+              </div>
+
+              {/* Media Preview & Upload Section */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* Image Preview */}
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold uppercase text-slate-400">
+                    {currentLang === 'uz' ? 'Yangilik rasmi' : currentLang === 'ru' ? 'Фото новости' : 'News Image'}
+                  </label>
+                  {newsImageBase64 ? (
+                    <div className="relative aspect-video rounded-xl overflow-hidden border border-slate-800 bg-slate-950">
+                      <img src={newsImageBase64} alt="news preview" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setNewsImageBase64('')}
+                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold shadow hover:bg-red-700"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="aspect-video bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-center text-slate-600 text-[10px] font-semibold">
+                      {currentLang === 'uz' ? 'Rasm yuklanmagan' : currentLang === 'ru' ? 'Фото не загружено' : 'No image'}
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileUpload(e, setNewsImageBase64)}
+                    className="w-full text-[9px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[9px] file:font-extrabold file:bg-[#FFC107] file:text-[#1E1A5B] cursor-pointer"
+                  />
+                </div>
+
+                {/* Video Preview */}
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold uppercase text-slate-400">
+                    {currentLang === 'uz' ? 'Yangilik videosi' : currentLang === 'ru' ? 'Видео новости' : 'News Video'}
+                  </label>
+                  {newsVideoBase64 ? (
+                    <div className="relative aspect-video rounded-xl overflow-hidden border border-slate-800 bg-slate-950">
+                      <video src={newsVideoBase64} controls className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setNewsVideoBase64('')}
+                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold shadow hover:bg-red-700 z-10"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="aspect-video bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-center text-slate-600 text-[10px] font-semibold">
+                      {currentLang === 'uz' ? 'Video yuklanmagan' : currentLang === 'ru' ? 'Видео не загружено' : 'No video'}
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    accept="video/*"
+                    onChange={(e) => handleFileUpload(e, setNewsVideoBase64)}
+                    className="w-full text-[9px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[9px] file:font-extrabold file:bg-[#FFC107] file:text-[#1E1A5B] cursor-pointer"
+                  />
+                </div>
               </div>
 
               <div className="pt-2 flex gap-3">

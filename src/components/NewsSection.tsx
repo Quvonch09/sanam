@@ -49,9 +49,16 @@ export const NewsSection: React.FC<NewsSectionProps> = ({ currentLang }) => {
               }`}
             >
               <div className="p-6 space-y-4">
-                {item.imageUrl && (
+                {item.imageUrl ? (
                   <img src={item.imageUrl} alt={item.title} className="w-full h-44 object-cover rounded-2xl border border-slate-800" />
-                )}
+                ) : item.videoUrl ? (
+                  <div className="relative w-full h-44 rounded-2xl overflow-hidden border border-slate-800 bg-slate-950">
+                    <video src={item.videoUrl} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                      <span className="p-3.5 rounded-full bg-black/70 text-[#FFC107] text-sm font-bold shadow-md hover:scale-110 transition-transform">▶</span>
+                    </div>
+                  </div>
+                ) : null}
 
                 <div className="flex items-center justify-between text-xs font-semibold">
                   <span className="px-2.5 py-1 rounded-md bg-[#FFC107] text-[#1E1A5B] font-extrabold uppercase text-[10px]">
@@ -112,9 +119,17 @@ export const NewsSection: React.FC<NewsSectionProps> = ({ currentLang }) => {
 
             <h3 className="text-xl sm:text-2xl font-black text-[#FFC107]">{selectedNews.title}</h3>
 
-            {selectedNews.imageUrl && (
-              <img src={selectedNews.imageUrl} alt={selectedNews.title} className="w-full h-60 object-cover rounded-2xl border border-slate-700" />
-            )}
+            {/* News Media Area */}
+            <div className="space-y-4">
+              {selectedNews.imageUrl && (
+                <img src={selectedNews.imageUrl} alt={selectedNews.title} className="w-full h-60 object-cover rounded-2xl border border-slate-700" />
+              )}
+              {selectedNews.videoUrl && (
+                <div className="rounded-2xl overflow-hidden border border-slate-700 bg-slate-950">
+                  <video src={selectedNews.videoUrl} controls className="w-full max-h-80 mx-auto object-contain" />
+                </div>
+              )}
+            </div>
 
             <p className="text-sm text-slate-300 leading-relaxed font-medium">
               {selectedNews.content}

@@ -15,6 +15,7 @@ export interface NewsItem {
   summary: string;
   content: string;
   imageUrl?: string;
+  videoUrl?: string;
 }
 
 export interface TeamMember {
