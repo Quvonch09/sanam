@@ -3,9 +3,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Language } from '../data/translations';
 import { CategoryItem, ProductItem, initialCategories, initialProducts } from '@/data/products';
+import { supabase } from '@/lib/supabase';
 
 export type { CategoryItem, ProductItem };
-
 
 export interface NewsItem {
   id: string;
@@ -20,8 +20,8 @@ export interface NewsItem {
 
 export interface TeamMember {
   id: string;
-  name: string;  // Ism Familiya
-  role: string;  // Lavozimi
+  name: string;
+  role: string;
   imageUrl?: string;
   phone?: string;
 }
@@ -56,47 +56,32 @@ export interface FeedbackItem {
 }
 
 interface AppContextType {
-  // Theme State
   isDarkMode: boolean;
   toggleTheme: () => void;
-
-  // Language State
   currentLang: Language;
   setLanguage: (lang: Language) => void;
-
-  // Stats
   visitorsCount: number;
   calcCount: number;
   leadsCount: number;
   incrementVisitors: () => void;
   incrementCalc: () => void;
   incrementLeads: () => void;
-
-  // Categories CRUD
   categories: CategoryItem[];
   addCategory: (cat: Omit<CategoryItem, 'id'>) => void;
   updateCategory: (id: string, cat: Partial<CategoryItem>) => void;
   deleteCategory: (id: string) => void;
-
-  // Products CRUD
   products: ProductItem[];
   addProduct: (product: Omit<ProductItem, 'id'>) => void;
   updateProduct: (id: string, product: Partial<ProductItem>) => void;
   deleteProduct: (id: string) => void;
-
-  // News CRUD
   newsList: NewsItem[];
   addNews: (news: Omit<NewsItem, 'id'>) => void;
   updateNews: (id: string, news: Partial<NewsItem>) => void;
   deleteNews: (id: string) => void;
-
-  // Team CRUD
   teamList: TeamMember[];
   addTeamMember: (member: Omit<TeamMember, 'id'>) => void;
   updateTeamMember: (id: string, member: Partial<TeamMember>) => void;
   deleteTeamMember: (id: string) => void;
-
-  // Leads & Inquiries
   leads: LeadItem[];
   calcInquiries: CalcInquiry[];
   addLead: (lead: Omit<LeadItem, 'id' | 'date' | 'status'>) => void;
@@ -105,48 +90,21 @@ interface AppContextType {
   updateCalcStatus: (id: string, status: CalcInquiry['status']) => void;
   deleteLead: (id: string) => void;
   deleteCalcInquiry: (id: string) => void;
-
-  // Feedback
   feedbacks: FeedbackItem[];
   addFeedback: (feedback: Omit<FeedbackItem, 'id' | 'date' | 'approved'>) => void;
   toggleApproveFeedback: (id: string) => void;
   deleteFeedback: (id: string) => void;
+  isLoading: boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-
 const initialTeam: TeamMember[] = [
-  {
-    id: 'team-7',
-    name: 'Saliyev Jamshid Joʻrayevich',
-    role: 'supply',
-    imageUrl: '/team/saliyev.png',
-  },
-  {
-    id: 'team-8',
-    name: 'Kodirov Akmal Ochilovich',
-    role: 'production',
-    imageUrl: '/team/kodirov.png',
-  },
-  {
-    id: 'team-9',
-    name: 'Boboqulov Akmal Abdullayevich',
-    role: 'hr',
-    imageUrl: '/team/boboqulov.png',
-  },
-  {
-    id: 'team-10',
-    name: 'Raximberdiyeva Shohista',
-    role: 'pr',
-    imageUrl: '/team/raximberdiyeva.png',
-  },
-  {
-    id: 'team-11',
-    name: 'Jumayeva Nasiba Ibodullayevna',
-    role: 'inspector',
-    imageUrl: '/team/jumayeva.png',
-  },
+  { id: 'team-7', name: 'Saliyev Jamshid Joʻrayevich', role: 'supply', imageUrl: '/team/saliyev.png' },
+  { id: 'team-8', name: 'Kodirov Akmal Ochilovich', role: 'production', imageUrl: '/team/kodirov.png' },
+  { id: 'team-9', name: 'Boboqulov Akmal Abdullayevich', role: 'hr', imageUrl: '/team/boboqulov.png' },
+  { id: 'team-10', name: 'Raximberdiyeva Shohista', role: 'pr', imageUrl: '/team/raximberdiyeva.png' },
+  { id: 'team-11', name: 'Jumayeva Nasiba Ibodullayevna', role: 'inspector', imageUrl: '/team/jumayeva.png' },
 ];
 
 const initialNews: NewsItem[] = [
@@ -156,11 +114,11 @@ const initialNews: NewsItem[] = [
     date: '2026-07-28',
     category: 'Texnologiya',
     summary: 'Fabrikamiz ishlab chiqarish unumdorligini 40% ga oshiradigan avtomatlashtirilgan yangi dastgohlarni ishga tushirdi.',
-    content: 'SANAM OFFICIAL fabrikasi Qashqadaryo viloyatida eng zamonaviy tikuv uskunalarini o’rnatishda davom etmoqda.',
+    content: 'SANAM OFFICIAL fabrikasi Qashqadaryo viloyatida eng zamonaviy tikuv uskunalarini ornatishda davom etmoqda.',
   },
   {
     id: 'news-2',
-    title: 'Korporativ Uniforma Tikish Bo‘yicha Katta Shartnoma Imzolandi',
+    title: 'Korporativ Uniforma Tikish Boyicha Katta Shartnoma Imzolandi',
     date: '2026-07-15',
     category: 'Hamkorlik',
     summary: 'Qarshi shahridagi yirik sanoat korxonasi uchun 2000 dan ortiq maxsus ishchi kiyimlari tayyorlanmoqda.',
@@ -169,40 +127,106 @@ const initialNews: NewsItem[] = [
 ];
 
 const initialFeedbacks: FeedbackItem[] = [
-  {
-    id: 'fb-1',
-    name: 'Parvina',
-    rating: 5,
-    text: "Quality products! Fabrikada tikilgan mahsulotlar juda sifatli va toza tikilgan. Buyurtmamiz a'lo darajada tayyorlandi. Katta rahmat!",
-    date: '2026-07-20',
-    approved: true,
-  },
-  {
-    id: 'fb-2',
-    name: 'Venera',
-    rating: 5,
-    text: 'Quality products! Narxlari juda qulay, tikuv sifati xalqaro andozalarga mos. Xodimlari juda xushmuomala.',
-    date: '2026-07-18',
-    approved: true,
-  },
-  {
-    id: 'fb-3',
-    name: 'Jasurbek K.',
-    rating: 5,
-    text: "Qarshi shahridagi eng yaxshi tikuvchilik fabrikasi. Korporativ kiyimlarni qisqa fursatda va a'lo sifatda tikib berishdi.",
-    date: '2026-07-10',
-    approved: true,
-  },
+  { id: 'fb-1', name: 'Parvina', rating: 5, text: 'Quality products! Fabrikada tikilgan mahsulotlar juda sifatli va toza tikilgan. Buyurtmamiz alo darajada tayyorlandi. Katta rahmat!', date: '2026-07-20', approved: true },
+  { id: 'fb-2', name: 'Venera', rating: 5, text: 'Quality products! Narxlari juda qulay, tikuv sifati xalqaro andozalarga mos. Xodimlari juda xushmuomala.', date: '2026-07-18', approved: true },
+  { id: 'fb-3', name: 'Jasurbek K.', rating: 5, text: 'Qarshi shahridagi eng yaxshi tikuvchilik fabrikasi. Korporativ kiyimlarni qisqa fursatda va alo sifatda tikib berishdi.', date: '2026-07-10', approved: true },
 ];
+
+// Helper: map supabase product row → ProductItem
+function mapProduct(row: any): ProductItem {
+  return {
+    id: row.id,
+    name: row.name,
+    category: row.category ?? '',
+    desc: row.desc ?? '',
+    imageUrl: row.image_url ?? '',
+    images: row.images ?? [],
+    model: row.model ?? '',
+    sizes: row.sizes ?? '',
+    material: row.material ?? '',
+    price: row.price ?? '',
+    badge: row.badge ?? '',
+  };
+}
+
+// Helper: map supabase category row → CategoryItem
+function mapCategory(row: any): CategoryItem {
+  return {
+    id: row.id,
+    key: row.key ?? '',
+    label: row.label ?? '',
+  };
+}
+
+// Helper: map supabase news row → NewsItem
+function mapNews(row: any): NewsItem {
+  return {
+    id: row.id,
+    title: row.title,
+    date: row.date ?? '',
+    category: row.category ?? '',
+    summary: row.summary ?? '',
+    content: row.content ?? '',
+    imageUrl: row.image_url,
+    videoUrl: row.video_url,
+  };
+}
+
+// Helper: map supabase team row → TeamMember
+function mapTeam(row: any): TeamMember {
+  return {
+    id: row.id,
+    name: row.name,
+    role: row.role ?? '',
+    imageUrl: row.image_url,
+    phone: row.phone,
+  };
+}
+
+// Helper: map supabase feedback row → FeedbackItem
+function mapFeedback(row: any): FeedbackItem {
+  return {
+    id: row.id,
+    name: row.name,
+    rating: row.rating ?? 5,
+    text: row.text ?? '',
+    date: row.date ?? '',
+    approved: row.approved ?? false,
+  };
+}
+
+// Helper: map supabase lead row → LeadItem
+function mapLead(row: any): LeadItem {
+  return {
+    id: row.id,
+    name: row.name ?? '',
+    phone: row.phone ?? '',
+    service: row.service ?? '',
+    message: row.message ?? '',
+    date: row.date ?? '',
+    status: row.status ?? 'new',
+  };
+}
+
+// Helper: map supabase calc row → CalcInquiry
+function mapCalc(row: any): CalcInquiry {
+  return {
+    id: row.id,
+    productType: row.product_type ?? '',
+    quantity: row.quantity ?? 0,
+    estimatedDays: row.estimated_days ?? 0,
+    phone: row.phone ?? '',
+    date: row.date ?? '',
+    status: row.status ?? 'new',
+  };
+}
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const [currentLang, setCurrentLangState] = useState<Language>('uz');
-
   const [visitorsCount, setVisitorsCount] = useState<number>(452);
   const [calcCount, setCalcCount] = useState<number>(89);
   const [leadsCount, setLeadsCount] = useState<number>(64);
-
   const [categories, setCategories] = useState<CategoryItem[]>(initialCategories);
   const [products, setProducts] = useState<ProductItem[]>(initialProducts);
   const [newsList, setNewsList] = useState<NewsItem[]>(initialNews);
@@ -210,107 +234,125 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [leads, setLeads] = useState<LeadItem[]>([]);
   const [calcInquiries, setCalcInquiries] = useState<CalcInquiry[]>([]);
   const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>(initialFeedbacks);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Load theme and data from localStorage
+  // Load theme/lang from localStorage (these stay local)
   useEffect(() => {
     try {
       const storedTheme = localStorage.getItem('sanam_theme');
       if (storedTheme === 'dark') setIsDarkMode(true);
-
       const storedLang = localStorage.getItem('sanam_lang') as Language;
-      if (storedLang && ['uz', 'ru', 'en'].includes(storedLang)) {
-        setCurrentLangState(storedLang);
-      }
-
-      const storedVisitors = localStorage.getItem('sanam_visitors');
-      if (storedVisitors) setVisitorsCount(parseInt(storedVisitors, 10));
-
-      const storedCalc = localStorage.getItem('sanam_calc_count');
-      if (storedCalc) setCalcCount(parseInt(storedCalc, 10));
-
-      const storedLeadsCount = localStorage.getItem('sanam_leads_count');
-      if (storedLeadsCount) setLeadsCount(parseInt(storedLeadsCount, 10));
-
-      const storedCategories = localStorage.getItem('sanam_categories');
-      if (storedCategories) setCategories(JSON.parse(storedCategories));
-
-      const storedProducts = localStorage.getItem('sanam_products_v3');
-      if (storedProducts) setProducts(JSON.parse(storedProducts));
-
-      const storedTeam = localStorage.getItem('sanam_team');
-      if (storedTeam) {
-        const parsedTeam = JSON.parse(storedTeam).filter(
-          (member: any) => !['team-1', 'team-2', 'team-3', 'team-4', 'team-5', 'team-6'].includes(member.id)
-        );
-        setTeamList(parsedTeam);
-        localStorage.setItem('sanam_team', JSON.stringify(parsedTeam));
-      }
-
-      const storedNews = localStorage.getItem('sanam_news');
-      if (storedNews) setNewsList(JSON.parse(storedNews));
-
-      const storedLeads = localStorage.getItem('sanam_leads');
-      if (storedLeads) setLeads(JSON.parse(storedLeads));
-
-      const storedCalcInquiries = localStorage.getItem('sanam_calc_inquiries');
-      if (storedCalcInquiries) setCalcInquiries(JSON.parse(storedCalcInquiries));
-
-      const storedFeedbacks = localStorage.getItem('sanam_feedbacks');
-      if (storedFeedbacks) setFeedbacks(JSON.parse(storedFeedbacks));
-    } catch (e) {
-      console.error('LocalStorage load error', e);
-    }
+      if (storedLang && ['uz', 'ru', 'en'].includes(storedLang)) setCurrentLangState(storedLang);
+    } catch (e) {}
   }, []);
 
-  // Real-time tab sync using the window storage event listener
+  // Load all data from Supabase on mount
   useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.newValue === null) return;
-      try {
-        if (e.key === 'sanam_team') {
-          const parsedTeam = JSON.parse(e.newValue).filter(
-            (member: any) => !['team-1', 'team-2', 'team-3', 'team-4', 'team-5', 'team-6'].includes(member.id)
-          );
-          setTeamList(parsedTeam);
-        }
-        if (e.key === 'sanam_products_v3') {
-          setProducts(JSON.parse(e.newValue));
-        }
-        if (e.key === 'sanam_news') {
-          setNewsList(JSON.parse(e.newValue));
-        }
-        if (e.key === 'sanam_categories') {
-          setCategories(JSON.parse(e.newValue));
-        }
-        if (e.key === 'sanam_feedbacks') {
-          setFeedbacks(JSON.parse(e.newValue));
-        }
-        if (e.key === 'sanam_theme') {
-          setIsDarkMode(e.newValue === 'dark');
-        }
-        if (e.key === 'sanam_lang') {
-          if (['uz', 'ru', 'en'].includes(e.newValue)) {
-            setCurrentLangState(e.newValue as Language);
-          }
-        }
-        if (e.key === 'sanam_leads') {
-          const parsed = JSON.parse(e.newValue);
-          setLeads(parsed);
-          setLeadsCount(parsed.length);
-        }
-        if (e.key === 'sanam_calc_inquiries') {
-          const parsed = JSON.parse(e.newValue);
-          setCalcInquiries(parsed);
-          setCalcCount(parsed.length);
-        }
-      } catch (err) {
-        console.error(`Error parsing synced key ${e.key}:`, err);
-      }
-    };
+    loadAllData();
+  }, []);
 
-    window.addEventListener('storage', handleStorageChange);
+  const loadAllData = async () => {
+    setIsLoading(true);
+    try {
+      await Promise.all([
+        loadProducts(),
+        loadCategories(),
+        loadNews(),
+        loadTeam(),
+        loadFeedbacks(),
+        loadLeads(),
+        loadCalcInquiries(),
+      ]);
+    } catch (e) {
+      console.error('Error loading data from Supabase:', e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadProducts = async () => {
+    const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
+    if (error) { console.error('products load error:', error); return; }
+    if (data && data.length > 0) setProducts(data.map(mapProduct));
+  };
+
+  const loadCategories = async () => {
+    const { data, error } = await supabase.from('categories').select('*').order('created_at', { ascending: true });
+    if (error) { console.error('categories load error:', error); return; }
+    if (data && data.length > 0) setCategories(data.map(mapCategory));
+  };
+
+  const loadNews = async () => {
+    const { data, error } = await supabase.from('news').select('*').order('created_at', { ascending: false });
+    if (error) { console.error('news load error:', error); return; }
+    if (data && data.length > 0) setNewsList(data.map(mapNews));
+  };
+
+  const loadTeam = async () => {
+    const { data, error } = await supabase.from('team_members').select('*').order('created_at', { ascending: true });
+    if (error) { console.error('team load error:', error); return; }
+    if (data && data.length > 0) setTeamList(data.map(mapTeam));
+  };
+
+  const loadFeedbacks = async () => {
+    const { data, error } = await supabase.from('feedbacks').select('*').order('created_at', { ascending: false });
+    if (error) { console.error('feedbacks load error:', error); return; }
+    if (data && data.length > 0) setFeedbacks(data.map(mapFeedback));
+  };
+
+  const loadLeads = async () => {
+    const { data, error } = await supabase.from('leads').select('*').order('created_at', { ascending: false });
+    if (error) { console.error('leads load error:', error); return; }
+    if (data) {
+      const mapped = data.map(mapLead);
+      setLeads(mapped);
+      setLeadsCount(mapped.length);
+    }
+  };
+
+  const loadCalcInquiries = async () => {
+    const { data, error } = await supabase.from('calc_inquiries').select('*').order('created_at', { ascending: false });
+    if (error) { console.error('calc_inquiries load error:', error); return; }
+    if (data) {
+      const mapped = data.map(mapCalc);
+      setCalcInquiries(mapped);
+      setCalcCount(mapped.length);
+    }
+  };
+
+  // Real-time subscriptions
+  useEffect(() => {
+    const productsChannel = supabase
+      .channel('products-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => loadProducts())
+      .subscribe();
+
+    const categoriesChannel = supabase
+      .channel('categories-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, () => loadCategories())
+      .subscribe();
+
+    const newsChannel = supabase
+      .channel('news-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'news' }, () => loadNews())
+      .subscribe();
+
+    const teamChannel = supabase
+      .channel('team-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'team_members' }, () => loadTeam())
+      .subscribe();
+
+    const feedbacksChannel = supabase
+      .channel('feedbacks-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'feedbacks' }, () => loadFeedbacks())
+      .subscribe();
+
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
+      supabase.removeChannel(productsChannel);
+      supabase.removeChannel(categoriesChannel);
+      supabase.removeChannel(newsChannel);
+      supabase.removeChannel(teamChannel);
+      supabase.removeChannel(feedbacksChannel);
     };
   }, []);
 
@@ -327,238 +369,256 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem('sanam_lang', lang);
   };
 
-  const incrementVisitors = () => {
-    setVisitorsCount((prev) => {
-      const next = prev + 1;
-      localStorage.setItem('sanam_visitors', next.toString());
-      return next;
-    });
-  };
+  const incrementVisitors = () => setVisitorsCount((prev) => prev + 1);
+  const incrementCalc = () => setCalcCount((prev) => prev + 1);
+  const incrementLeads = () => setLeadsCount((prev) => prev + 1);
 
-  const incrementCalc = () => {
-    setCalcCount((prev) => {
-      const next = prev + 1;
-      localStorage.setItem('sanam_calc_count', next.toString());
-      return next;
-    });
-  };
-
-  const incrementLeads = () => {
-    setLeadsCount((prev) => {
-      const next = prev + 1;
-      localStorage.setItem('sanam_leads_count', next.toString());
-      return next;
-    });
-  };
-
-  // Categories CRUD
-  const addCategory = (cat: Omit<CategoryItem, 'id'>) => {
+  // ==================== CATEGORIES CRUD ====================
+  const addCategory = async (cat: Omit<CategoryItem, 'id'>) => {
     const newItem: CategoryItem = { ...cat, id: 'cat-' + Date.now() };
-    const updated = [...categories, newItem];
-    setCategories(updated);
-    localStorage.setItem('sanam_categories', JSON.stringify(updated));
+    const { error } = await supabase.from('categories').insert({
+      id: newItem.id,
+      key: newItem.key,
+      label: newItem.label,
+    });
+    if (error) { console.error('addCategory error:', error); return; }
+    setCategories((prev) => [...prev, newItem]);
   };
 
-  const updateCategory = (id: string, updatedFields: Partial<CategoryItem>) => {
-    const updated = categories.map((c) => (c.id === id ? { ...c, ...updatedFields } : c));
-    setCategories(updated);
-    localStorage.setItem('sanam_categories', JSON.stringify(updated));
+  const updateCategory = async (id: string, updatedFields: Partial<CategoryItem>) => {
+    const dbFields: any = {};
+    if (updatedFields.key !== undefined) dbFields.key = updatedFields.key;
+    if (updatedFields.label !== undefined) dbFields.label = updatedFields.label;
+    const { error } = await supabase.from('categories').update(dbFields).eq('id', id);
+    if (error) { console.error('updateCategory error:', error); return; }
+    setCategories((prev) => prev.map((c) => (c.id === id ? { ...c, ...updatedFields } : c)));
   };
 
-  const deleteCategory = (id: string) => {
-    const updated = categories.filter((c) => c.id !== id);
-    setCategories(updated);
-    localStorage.setItem('sanam_categories', JSON.stringify(updated));
+  const deleteCategory = async (id: string) => {
+    const { error } = await supabase.from('categories').delete().eq('id', id);
+    if (error) { console.error('deleteCategory error:', error); return; }
+    setCategories((prev) => prev.filter((c) => c.id !== id));
   };
 
-  // Product CRUD
-  const addProduct = (product: Omit<ProductItem, 'id'>) => {
+  // ==================== PRODUCTS CRUD ====================
+  const addProduct = async (product: Omit<ProductItem, 'id'>) => {
     const newItem: ProductItem = { ...product, id: 'prod-' + Date.now() };
-    const updated = [newItem, ...products];
-    setProducts(updated);
-    localStorage.setItem('sanam_products_v3', JSON.stringify(updated));
+    const { error } = await supabase.from('products').insert({
+      id: newItem.id,
+      name: newItem.name,
+      category: newItem.category,
+      desc: newItem.desc,
+      image_url: newItem.imageUrl,
+      images: newItem.images ?? [],
+      model: newItem.model,
+      sizes: newItem.sizes,
+      material: newItem.material,
+      price: newItem.price,
+      badge: newItem.badge ?? '',
+    });
+    if (error) { console.error('addProduct error:', error); return; }
+    setProducts((prev) => [newItem, ...prev]);
   };
 
-  const updateProduct = (id: string, updatedFields: Partial<ProductItem>) => {
-    const updated = products.map((p) => (p.id === id ? { ...p, ...updatedFields } : p));
-    setProducts(updated);
-    localStorage.setItem('sanam_products_v3', JSON.stringify(updated));
+  const updateProduct = async (id: string, updatedFields: Partial<ProductItem>) => {
+    const dbFields: any = {};
+    if (updatedFields.name !== undefined) dbFields.name = updatedFields.name;
+    if (updatedFields.category !== undefined) dbFields.category = updatedFields.category;
+    if (updatedFields.desc !== undefined) dbFields.desc = updatedFields.desc;
+    if (updatedFields.imageUrl !== undefined) dbFields.image_url = updatedFields.imageUrl;
+    if (updatedFields.images !== undefined) dbFields.images = updatedFields.images;
+    if (updatedFields.model !== undefined) dbFields.model = updatedFields.model;
+    if (updatedFields.sizes !== undefined) dbFields.sizes = updatedFields.sizes;
+    if (updatedFields.material !== undefined) dbFields.material = updatedFields.material;
+    if (updatedFields.price !== undefined) dbFields.price = updatedFields.price;
+    if (updatedFields.badge !== undefined) dbFields.badge = updatedFields.badge;
+    const { error } = await supabase.from('products').update(dbFields).eq('id', id);
+    if (error) { console.error('updateProduct error:', error); return; }
+    setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, ...updatedFields } : p)));
   };
 
-  const deleteProduct = (id: string) => {
-    const updated = products.filter((p) => p.id !== id);
-    setProducts(updated);
-    localStorage.setItem('sanam_products_v3', JSON.stringify(updated));
+  const deleteProduct = async (id: string) => {
+    const { error } = await supabase.from('products').delete().eq('id', id);
+    if (error) { console.error('deleteProduct error:', error); return; }
+    setProducts((prev) => prev.filter((p) => p.id !== id));
   };
 
-  // News CRUD
-  const addNews = (news: Omit<NewsItem, 'id'>) => {
+  // ==================== NEWS CRUD ====================
+  const addNews = async (news: Omit<NewsItem, 'id'>) => {
     const newItem: NewsItem = { ...news, id: 'news-' + Date.now() };
-    const updated = [newItem, ...newsList];
-    setNewsList(updated);
-    localStorage.setItem('sanam_news', JSON.stringify(updated));
+    const { error } = await supabase.from('news').insert({
+      id: newItem.id,
+      title: newItem.title,
+      date: newItem.date,
+      category: newItem.category,
+      summary: newItem.summary,
+      content: newItem.content,
+      image_url: newItem.imageUrl ?? null,
+      video_url: newItem.videoUrl ?? null,
+    });
+    if (error) { console.error('addNews error:', error); return; }
+    setNewsList((prev) => [newItem, ...prev]);
   };
 
-  const updateNews = (id: string, updatedFields: Partial<NewsItem>) => {
-    const updated = newsList.map((n) => (n.id === id ? { ...n, ...updatedFields } : n));
-    setNewsList(updated);
-    localStorage.setItem('sanam_news', JSON.stringify(updated));
+  const updateNews = async (id: string, updatedFields: Partial<NewsItem>) => {
+    const dbFields: any = {};
+    if (updatedFields.title !== undefined) dbFields.title = updatedFields.title;
+    if (updatedFields.date !== undefined) dbFields.date = updatedFields.date;
+    if (updatedFields.category !== undefined) dbFields.category = updatedFields.category;
+    if (updatedFields.summary !== undefined) dbFields.summary = updatedFields.summary;
+    if (updatedFields.content !== undefined) dbFields.content = updatedFields.content;
+    if (updatedFields.imageUrl !== undefined) dbFields.image_url = updatedFields.imageUrl;
+    if (updatedFields.videoUrl !== undefined) dbFields.video_url = updatedFields.videoUrl;
+    const { error } = await supabase.from('news').update(dbFields).eq('id', id);
+    if (error) { console.error('updateNews error:', error); return; }
+    setNewsList((prev) => prev.map((n) => (n.id === id ? { ...n, ...updatedFields } : n)));
   };
 
-  const deleteNews = (id: string) => {
-    const updated = newsList.filter((n) => n.id !== id);
-    setNewsList(updated);
-    localStorage.setItem('sanam_news', JSON.stringify(updated));
+  const deleteNews = async (id: string) => {
+    const { error } = await supabase.from('news').delete().eq('id', id);
+    if (error) { console.error('deleteNews error:', error); return; }
+    setNewsList((prev) => prev.filter((n) => n.id !== id));
   };
 
-  // Team CRUD
-  const addTeamMember = (member: Omit<TeamMember, 'id'>) => {
+  // ==================== TEAM CRUD ====================
+  const addTeamMember = async (member: Omit<TeamMember, 'id'>) => {
     const newItem: TeamMember = { ...member, id: 'team-' + Date.now() };
-    const updated = [...teamList, newItem];
-    setTeamList(updated);
-    localStorage.setItem('sanam_team', JSON.stringify(updated));
+    const { error } = await supabase.from('team_members').insert({
+      id: newItem.id,
+      name: newItem.name,
+      role: newItem.role,
+      image_url: newItem.imageUrl ?? null,
+      phone: newItem.phone ?? null,
+    });
+    if (error) { console.error('addTeamMember error:', error); return; }
+    setTeamList((prev) => [...prev, newItem]);
   };
 
-  const updateTeamMember = (id: string, updatedFields: Partial<TeamMember>) => {
-    const updated = teamList.map((t) => (t.id === id ? { ...t, ...updatedFields } : t));
-    setTeamList(updated);
-    localStorage.setItem('sanam_team', JSON.stringify(updated));
+  const updateTeamMember = async (id: string, updatedFields: Partial<TeamMember>) => {
+    const dbFields: any = {};
+    if (updatedFields.name !== undefined) dbFields.name = updatedFields.name;
+    if (updatedFields.role !== undefined) dbFields.role = updatedFields.role;
+    if (updatedFields.imageUrl !== undefined) dbFields.image_url = updatedFields.imageUrl;
+    if (updatedFields.phone !== undefined) dbFields.phone = updatedFields.phone;
+    const { error } = await supabase.from('team_members').update(dbFields).eq('id', id);
+    if (error) { console.error('updateTeamMember error:', error); return; }
+    setTeamList((prev) => prev.map((t) => (t.id === id ? { ...t, ...updatedFields } : t)));
   };
 
-  const deleteTeamMember = (id: string) => {
-    const updated = teamList.filter((t) => t.id !== id);
-    setTeamList(updated);
-    localStorage.setItem('sanam_team', JSON.stringify(updated));
+  const deleteTeamMember = async (id: string) => {
+    const { error } = await supabase.from('team_members').delete().eq('id', id);
+    if (error) { console.error('deleteTeamMember error:', error); return; }
+    setTeamList((prev) => prev.filter((t) => t.id !== id));
   };
 
-  // Leads & Inquiries
-  const addLead = (lead: Omit<LeadItem, 'id' | 'date' | 'status'>) => {
+  // ==================== LEADS ====================
+  const addLead = async (lead: Omit<LeadItem, 'id' | 'date' | 'status'>) => {
     const newItem: LeadItem = {
       ...lead,
       id: 'lead-' + Date.now(),
       date: new Date().toISOString().split('T')[0],
       status: 'new',
     };
-    
-    let latest: LeadItem[] = [];
-    try {
-      const stored = localStorage.getItem('sanam_leads');
-      if (stored) latest = JSON.parse(stored);
-    } catch (e) {
-      latest = leads;
-    }
-
-    const updated = [newItem, ...latest];
-    setLeads(updated);
-    localStorage.setItem('sanam_leads', JSON.stringify(updated));
+    const { error } = await supabase.from('leads').insert({
+      id: newItem.id,
+      name: newItem.name,
+      phone: newItem.phone,
+      service: newItem.service,
+      message: newItem.message,
+      date: newItem.date,
+      status: newItem.status,
+    });
+    if (error) { console.error('addLead error:', error); return; }
+    setLeads((prev) => [newItem, ...prev]);
     incrementLeads();
   };
 
-  const addCalcInquiry = (inquiry: Omit<CalcInquiry, 'id' | 'date' | 'status'>) => {
+  const addCalcInquiry = async (inquiry: Omit<CalcInquiry, 'id' | 'date' | 'status'>) => {
     const newItem: CalcInquiry = {
       ...inquiry,
       id: 'calc-' + Date.now(),
       date: new Date().toISOString().split('T')[0],
       status: 'new',
     };
-    
-    let latest: CalcInquiry[] = [];
-    try {
-      const stored = localStorage.getItem('sanam_calc_inquiries');
-      if (stored) latest = JSON.parse(stored);
-    } catch (e) {
-      latest = calcInquiries;
-    }
-
-    const updated = [newItem, ...latest];
-    setCalcInquiries(updated);
-    localStorage.setItem('sanam_calc_inquiries', JSON.stringify(updated));
+    const { error } = await supabase.from('calc_inquiries').insert({
+      id: newItem.id,
+      product_type: newItem.productType,
+      quantity: newItem.quantity,
+      estimated_days: newItem.estimatedDays,
+      phone: newItem.phone,
+      date: newItem.date,
+      status: newItem.status,
+    });
+    if (error) { console.error('addCalcInquiry error:', error); return; }
+    setCalcInquiries((prev) => [newItem, ...prev]);
     incrementCalc();
   };
 
-  const updateLeadStatus = (id: string, status: LeadItem['status']) => {
-    let latest: LeadItem[] = [];
-    try {
-      const stored = localStorage.getItem('sanam_leads');
-      if (stored) latest = JSON.parse(stored);
-    } catch (e) {
-      latest = leads;
-    }
-
-    const updated = latest.map((l) => (l.id === id ? { ...l, status } : l));
-    setLeads(updated);
-    localStorage.setItem('sanam_leads', JSON.stringify(updated));
+  const updateLeadStatus = async (id: string, status: LeadItem['status']) => {
+    const { error } = await supabase.from('leads').update({ status }).eq('id', id);
+    if (error) { console.error('updateLeadStatus error:', error); return; }
+    setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status } : l)));
   };
 
-  const updateCalcStatus = (id: string, status: CalcInquiry['status']) => {
-    let latest: CalcInquiry[] = [];
-    try {
-      const stored = localStorage.getItem('sanam_calc_inquiries');
-      if (stored) latest = JSON.parse(stored);
-    } catch (e) {
-      latest = calcInquiries;
-    }
-
-    const updated = latest.map((c) => (c.id === id ? { ...c, status } : c));
-    setCalcInquiries(updated);
-    localStorage.setItem('sanam_calc_inquiries', JSON.stringify(updated));
+  const updateCalcStatus = async (id: string, status: CalcInquiry['status']) => {
+    const { error } = await supabase.from('calc_inquiries').update({ status }).eq('id', id);
+    if (error) { console.error('updateCalcStatus error:', error); return; }
+    setCalcInquiries((prev) => prev.map((c) => (c.id === id ? { ...c, status } : c)));
   };
 
-  const deleteLead = (id: string) => {
-    let latest: LeadItem[] = [];
-    try {
-      const stored = localStorage.getItem('sanam_leads');
-      if (stored) latest = JSON.parse(stored);
-    } catch (e) {
-      latest = leads;
-    }
-
-    const updated = latest.filter((l) => l.id !== id);
-    setLeads(updated);
-    localStorage.setItem('sanam_leads', JSON.stringify(updated));
-    setLeadsCount(updated.length);
-    localStorage.setItem('sanam_leads_count', updated.length.toString());
+  const deleteLead = async (id: string) => {
+    const { error } = await supabase.from('leads').delete().eq('id', id);
+    if (error) { console.error('deleteLead error:', error); return; }
+    setLeads((prev) => {
+      const updated = prev.filter((l) => l.id !== id);
+      setLeadsCount(updated.length);
+      return updated;
+    });
   };
 
-  const deleteCalcInquiry = (id: string) => {
-    let latest: CalcInquiry[] = [];
-    try {
-      const stored = localStorage.getItem('sanam_calc_inquiries');
-      if (stored) latest = JSON.parse(stored);
-    } catch (e) {
-      latest = calcInquiries;
-    }
-
-    const updated = latest.filter((c) => c.id !== id);
-    setCalcInquiries(updated);
-    localStorage.setItem('sanam_calc_inquiries', JSON.stringify(updated));
-    setCalcCount(updated.length);
-    localStorage.setItem('sanam_calc_count', updated.length.toString());
+  const deleteCalcInquiry = async (id: string) => {
+    const { error } = await supabase.from('calc_inquiries').delete().eq('id', id);
+    if (error) { console.error('deleteCalcInquiry error:', error); return; }
+    setCalcInquiries((prev) => {
+      const updated = prev.filter((c) => c.id !== id);
+      setCalcCount(updated.length);
+      return updated;
+    });
   };
 
-  // Feedback
-  const addFeedback = (feedback: Omit<FeedbackItem, 'id' | 'date' | 'approved'>) => {
+  // ==================== FEEDBACKS ====================
+  const addFeedback = async (feedback: Omit<FeedbackItem, 'id' | 'date' | 'approved'>) => {
     const newItem: FeedbackItem = {
       ...feedback,
       id: 'fb-' + Date.now(),
       date: new Date().toISOString().split('T')[0],
       approved: false,
     };
-    const updated = [newItem, ...feedbacks];
-    setFeedbacks(updated);
-    localStorage.setItem('sanam_feedbacks', JSON.stringify(updated));
+    const { error } = await supabase.from('feedbacks').insert({
+      id: newItem.id,
+      name: newItem.name,
+      rating: newItem.rating,
+      text: newItem.text,
+      date: newItem.date,
+      approved: newItem.approved,
+    });
+    if (error) { console.error('addFeedback error:', error); return; }
+    setFeedbacks((prev) => [newItem, ...prev]);
   };
 
-  const toggleApproveFeedback = (id: string) => {
-    const updated = feedbacks.map((f) => (f.id === id ? { ...f, approved: !f.approved } : f));
-    setFeedbacks(updated);
-    localStorage.setItem('sanam_feedbacks', JSON.stringify(updated));
+  const toggleApproveFeedback = async (id: string) => {
+    const fb = feedbacks.find((f) => f.id === id);
+    if (!fb) return;
+    const newApproved = !fb.approved;
+    const { error } = await supabase.from('feedbacks').update({ approved: newApproved }).eq('id', id);
+    if (error) { console.error('toggleApproveFeedback error:', error); return; }
+    setFeedbacks((prev) => prev.map((f) => (f.id === id ? { ...f, approved: newApproved } : f)));
   };
 
-  const deleteFeedback = (id: string) => {
-    const updated = feedbacks.filter((f) => f.id !== id);
-    setFeedbacks(updated);
-    localStorage.setItem('sanam_feedbacks', JSON.stringify(updated));
+  const deleteFeedback = async (id: string) => {
+    const { error } = await supabase.from('feedbacks').delete().eq('id', id);
+    if (error) { console.error('deleteFeedback error:', error); return; }
+    setFeedbacks((prev) => prev.filter((f) => f.id !== id));
   };
 
   return (
@@ -602,6 +662,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addFeedback,
         toggleApproveFeedback,
         deleteFeedback,
+        isLoading,
       }}
     >
       {children}
