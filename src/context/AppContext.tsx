@@ -407,39 +407,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const loadCategories = async () => {
     try {
-      const { data, error } = await supabase.from('categories').select('*').order('created_at', { ascending: true });
-      
-      let localList: CategoryItem[] = [];
-      try {
-        const raw = localStorage.getItem('sanam_categories');
-        if (raw) localList = JSON.parse(raw);
-      } catch (e) {}
+      setCategories(initialCategories);
+      localStorage.setItem('sanam_categories', JSON.stringify(initialCategories));
 
-      if (error) {
-        if (localList.length > 0) setCategories(localList);
-        return;
+      const rowsToInsert = initialCategories.map((c) => ({
+        id: c.id,
+        key: c.key,
+        label: c.label,
+      }));
+      await supabase.from('categories').upsert(rowsToInsert);
+
+      const validIds = new Set(initialCategories.map((c) => c.id));
+      const { data } = await supabase.from('categories').select('id');
+      if (data) {
+        const legacyIds = data.filter((row) => !validIds.has(row.id)).map((row) => row.id);
+        if (legacyIds.length > 0) {
+          await supabase.from('categories').delete().in('id', legacyIds);
+        }
       }
-
-      const dbMapped = (data || []).map(mapCategory);
-      const dbIds = new Set(dbMapped.map((c) => c.id));
-      const candidateMap = new Map<string, CategoryItem>();
-      [...initialCategories, ...localList].forEach((c) => candidateMap.set(c.id, c));
-      const candidateList = Array.from(candidateMap.values());
-      const missingInDb = candidateList.filter((c) => !dbIds.has(c.id));
-
-      if (missingInDb.length > 0) {
-        const rowsToInsert = missingInDb.map((c) => ({
-          id: c.id,
-          key: c.key,
-          label: c.label,
-        }));
-        await supabase.from('categories').upsert(rowsToInsert);
-      }
-
-      const finalCombined = [...dbMapped, ...missingInDb];
-      const resultList = finalCombined.length > 0 ? finalCombined : initialCategories;
-      setCategories(resultList);
-      localStorage.setItem('sanam_categories', JSON.stringify(resultList));
     } catch (e) {
       console.error('loadCategories exception:', e);
     }

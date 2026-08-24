@@ -97,9 +97,11 @@ export const translations = {
       categories: {
         all: "Barchasi",
         fashion: "Erkaklar va ayollar kiyimlari",
-        uniforms: "Ishchi va korporativ uniforma",
+        uniforms: "Ishchi va korporativ uniformalar",
+        "school-uniforms": "Maktab va bolalar kiyimlari",
+        "med-uniforms": "Tibbiyot va xizmat ko'rsatish formalari",
+        bedding: "To'qimachilik va yotoq anjomlari",
         workshop: "Fabrika sexi & Texnologiya",
-        bedding: "To'qimachilik va mato",
       },
     },
     team: {
@@ -449,8 +451,10 @@ export const translations = {
         all: "Все",
         fashion: "Мужская и женская одежда",
         uniforms: "Спецодежда и корпоративная форма",
+        "school-uniforms": "Школьная и детская одежда",
+        "med-uniforms": "Медицинская форма и спецодежда",
+        bedding: "Текстиль и постельные принадлежности",
         workshop: "Швейный цех & Технологии",
-        bedding: "Текстиль и ткани",
       },
     },
     team: {
@@ -788,8 +792,10 @@ export const translations = {
         all: "All",
         fashion: "Men & Women Apparel",
         uniforms: "Workwear & Corporate Uniforms",
+        "school-uniforms": "School & Children Apparel",
+        "med-uniforms": "Medical & Service Uniforms",
+        bedding: "Textiles & Bedding Sets",
         workshop: "Sewing Workshop & Tech",
-        bedding: "Textiles & Fabrics",
       },
     },
     team: {
