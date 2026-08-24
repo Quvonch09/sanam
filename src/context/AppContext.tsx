@@ -95,6 +95,7 @@ interface AppContextType {
   toggleApproveFeedback: (id: string) => void;
   deleteFeedback: (id: string) => void;
   isLoading: boolean;
+  syncLocalStorageToSupabase: () => Promise<{ success: boolean; message: string }>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -138,7 +139,7 @@ function mapProduct(row: any): ProductItem {
     id: row.id,
     name: row.name,
     category: row.category ?? '',
-    desc: row.description ?? '',
+    desc: row.description ?? row.desc ?? '',
     imageUrl: row.image_url ?? '',
     images: row.images ?? [],
     model: row.model ?? '',
@@ -236,17 +237,68 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>(initialFeedbacks);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Load theme/lang from localStorage (these stay local)
+  // 1. Initial immediate load from LocalStorage as fallback cache on mount
   useEffect(() => {
     try {
       const storedTheme = localStorage.getItem('sanam_theme');
       if (storedTheme === 'dark') setIsDarkMode(true);
+
       const storedLang = localStorage.getItem('sanam_lang') as Language;
       if (storedLang && ['uz', 'ru', 'en'].includes(storedLang)) setCurrentLangState(storedLang);
-    } catch (e) {}
+
+      const storedProducts = localStorage.getItem('sanam_products_v3') || localStorage.getItem('sanam_products');
+      if (storedProducts) {
+        const parsed = JSON.parse(storedProducts);
+        if (Array.isArray(parsed) && parsed.length > 0) setProducts(parsed);
+      }
+
+      const storedCategories = localStorage.getItem('sanam_categories');
+      if (storedCategories) {
+        const parsed = JSON.parse(storedCategories);
+        if (Array.isArray(parsed) && parsed.length > 0) setCategories(parsed);
+      }
+
+      const storedNews = localStorage.getItem('sanam_news');
+      if (storedNews) {
+        const parsed = JSON.parse(storedNews);
+        if (Array.isArray(parsed) && parsed.length > 0) setNewsList(parsed);
+      }
+
+      const storedTeam = localStorage.getItem('sanam_team');
+      if (storedTeam) {
+        const parsed = JSON.parse(storedTeam);
+        if (Array.isArray(parsed) && parsed.length > 0) setTeamList(parsed);
+      }
+
+      const storedFeedbacks = localStorage.getItem('sanam_feedbacks');
+      if (storedFeedbacks) {
+        const parsed = JSON.parse(storedFeedbacks);
+        if (Array.isArray(parsed) && parsed.length > 0) setFeedbacks(parsed);
+      }
+
+      const storedLeads = localStorage.getItem('sanam_leads');
+      if (storedLeads) {
+        const parsed = JSON.parse(storedLeads);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setLeads(parsed);
+          setLeadsCount(parsed.length);
+        }
+      }
+
+      const storedCalc = localStorage.getItem('sanam_calc_inquiries');
+      if (storedCalc) {
+        const parsed = JSON.parse(storedCalc);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setCalcInquiries(parsed);
+          setCalcCount(parsed.length);
+        }
+      }
+    } catch (e) {
+      console.error('LocalStorage load cache error:', e);
+    }
   }, []);
 
-  // Load all data from Supabase on mount
+  // 2. Load all data from Supabase and auto-sync missing items
   useEffect(() => {
     loadAllData();
   }, []);
@@ -271,52 +323,410 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const loadProducts = async () => {
-    const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
-    if (error) { console.error('products load error:', error); return; }
-    if (data && data.length > 0) setProducts(data.map(mapProduct));
+    try {
+      const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
+      
+      // Read local cache
+      let localList: ProductItem[] = [];
+      try {
+        const raw = localStorage.getItem('sanam_products_v3') || localStorage.getItem('sanam_products');
+        if (raw) localList = JSON.parse(raw);
+      } catch (e) {}
+
+      if (error) {
+        console.error('products load error:', error);
+        if (localList.length > 0) setProducts(localList);
+        return;
+      }
+
+      const dbMapped = (data || []).map(mapProduct);
+      const dbIds = new Set(dbMapped.map((p) => p.id));
+
+      // Items in localStorage or initial list not yet in Supabase
+      const candidateList = localList.length > 0 ? localList : initialProducts;
+      const missingInDb = candidateList.filter((p) => !dbIds.has(p.id));
+
+      if (missingInDb.length > 0) {
+        // Auto-migrate missing items to Supabase
+        const rowsToInsert = missingInDb.map((p) => ({
+          id: p.id,
+          name: p.name,
+          category: p.category,
+          description: p.desc,
+          image_url: p.imageUrl,
+          images: p.images ?? [],
+          model: p.model,
+          sizes: p.sizes,
+          material: p.material,
+          price: p.price,
+          badge: p.badge ?? '',
+        }));
+        await supabase.from('products').upsert(rowsToInsert);
+      }
+
+      const finalCombined = [...dbMapped, ...missingInDb];
+      const resultList = finalCombined.length > 0 ? finalCombined : initialProducts;
+      setProducts(resultList);
+      localStorage.setItem('sanam_products_v3', JSON.stringify(resultList));
+    } catch (e) {
+      console.error('loadProducts exception:', e);
+    }
   };
 
   const loadCategories = async () => {
-    const { data, error } = await supabase.from('categories').select('*').order('created_at', { ascending: true });
-    if (error) { console.error('categories load error:', error); return; }
-    if (data && data.length > 0) setCategories(data.map(mapCategory));
+    try {
+      const { data, error } = await supabase.from('categories').select('*').order('created_at', { ascending: true });
+      
+      let localList: CategoryItem[] = [];
+      try {
+        const raw = localStorage.getItem('sanam_categories');
+        if (raw) localList = JSON.parse(raw);
+      } catch (e) {}
+
+      if (error) {
+        if (localList.length > 0) setCategories(localList);
+        return;
+      }
+
+      const dbMapped = (data || []).map(mapCategory);
+      const dbIds = new Set(dbMapped.map((c) => c.id));
+      const candidateList = localList.length > 0 ? localList : initialCategories;
+      const missingInDb = candidateList.filter((c) => !dbIds.has(c.id));
+
+      if (missingInDb.length > 0) {
+        const rowsToInsert = missingInDb.map((c) => ({
+          id: c.id,
+          key: c.key,
+          label: c.label,
+        }));
+        await supabase.from('categories').upsert(rowsToInsert);
+      }
+
+      const finalCombined = [...dbMapped, ...missingInDb];
+      const resultList = finalCombined.length > 0 ? finalCombined : initialCategories;
+      setCategories(resultList);
+      localStorage.setItem('sanam_categories', JSON.stringify(resultList));
+    } catch (e) {
+      console.error('loadCategories exception:', e);
+    }
   };
 
   const loadNews = async () => {
-    const { data, error } = await supabase.from('news').select('*').order('created_at', { ascending: false });
-    if (error) { console.error('news load error:', error); return; }
-    if (data && data.length > 0) setNewsList(data.map(mapNews));
+    try {
+      const { data, error } = await supabase.from('news').select('*').order('created_at', { ascending: false });
+      
+      let localList: NewsItem[] = [];
+      try {
+        const raw = localStorage.getItem('sanam_news');
+        if (raw) localList = JSON.parse(raw);
+      } catch (e) {}
+
+      if (error) {
+        if (localList.length > 0) setNewsList(localList);
+        return;
+      }
+
+      const dbMapped = (data || []).map(mapNews);
+      const dbIds = new Set(dbMapped.map((n) => n.id));
+      const candidateList = localList.length > 0 ? localList : initialNews;
+      const missingInDb = candidateList.filter((n) => !dbIds.has(n.id));
+
+      if (missingInDb.length > 0) {
+        const rowsToInsert = missingInDb.map((n) => ({
+          id: n.id,
+          title: n.title,
+          date: n.date,
+          category: n.category,
+          summary: n.summary,
+          content: n.content,
+          image_url: n.imageUrl ?? null,
+          video_url: n.videoUrl ?? null,
+        }));
+        await supabase.from('news').upsert(rowsToInsert);
+      }
+
+      const finalCombined = [...dbMapped, ...missingInDb];
+      const resultList = finalCombined.length > 0 ? finalCombined : initialNews;
+      setNewsList(resultList);
+      localStorage.setItem('sanam_news', JSON.stringify(resultList));
+    } catch (e) {
+      console.error('loadNews exception:', e);
+    }
   };
 
   const loadTeam = async () => {
-    const { data, error } = await supabase.from('team_members').select('*').order('created_at', { ascending: true });
-    if (error) { console.error('team load error:', error); return; }
-    if (data && data.length > 0) setTeamList(data.map(mapTeam));
+    try {
+      const { data, error } = await supabase.from('team_members').select('*').order('created_at', { ascending: true });
+      
+      let localList: TeamMember[] = [];
+      try {
+        const raw = localStorage.getItem('sanam_team');
+        if (raw) localList = JSON.parse(raw);
+      } catch (e) {}
+
+      if (error) {
+        if (localList.length > 0) setTeamList(localList);
+        return;
+      }
+
+      const dbMapped = (data || []).map(mapTeam);
+      const dbIds = new Set(dbMapped.map((t) => t.id));
+      const candidateList = localList.length > 0 ? localList : initialTeam;
+      const missingInDb = candidateList.filter((t) => !dbIds.has(t.id));
+
+      if (missingInDb.length > 0) {
+        const rowsToInsert = missingInDb.map((t) => ({
+          id: t.id,
+          name: t.name,
+          role: t.role,
+          image_url: t.imageUrl ?? null,
+          phone: t.phone ?? null,
+        }));
+        await supabase.from('team_members').upsert(rowsToInsert);
+      }
+
+      const finalCombined = [...dbMapped, ...missingInDb];
+      const resultList = finalCombined.length > 0 ? finalCombined : initialTeam;
+      setTeamList(resultList);
+      localStorage.setItem('sanam_team', JSON.stringify(resultList));
+    } catch (e) {
+      console.error('loadTeam exception:', e);
+    }
   };
 
   const loadFeedbacks = async () => {
-    const { data, error } = await supabase.from('feedbacks').select('*').order('created_at', { ascending: false });
-    if (error) { console.error('feedbacks load error:', error); return; }
-    if (data && data.length > 0) setFeedbacks(data.map(mapFeedback));
+    try {
+      const { data, error } = await supabase.from('feedbacks').select('*').order('created_at', { ascending: false });
+      
+      let localList: FeedbackItem[] = [];
+      try {
+        const raw = localStorage.getItem('sanam_feedbacks');
+        if (raw) localList = JSON.parse(raw);
+      } catch (e) {}
+
+      if (error) {
+        if (localList.length > 0) setFeedbacks(localList);
+        return;
+      }
+
+      const dbMapped = (data || []).map(mapFeedback);
+      const dbIds = new Set(dbMapped.map((f) => f.id));
+      const candidateList = localList.length > 0 ? localList : initialFeedbacks;
+      const missingInDb = candidateList.filter((f) => !dbIds.has(f.id));
+
+      if (missingInDb.length > 0) {
+        const rowsToInsert = missingInDb.map((f) => ({
+          id: f.id,
+          name: f.name,
+          rating: f.rating,
+          text: f.text,
+          date: f.date,
+          approved: f.approved,
+        }));
+        await supabase.from('feedbacks').upsert(rowsToInsert);
+      }
+
+      const finalCombined = [...dbMapped, ...missingInDb];
+      const resultList = finalCombined.length > 0 ? finalCombined : initialFeedbacks;
+      setFeedbacks(resultList);
+      localStorage.setItem('sanam_feedbacks', JSON.stringify(resultList));
+    } catch (e) {
+      console.error('loadFeedbacks exception:', e);
+    }
   };
 
   const loadLeads = async () => {
-    const { data, error } = await supabase.from('leads').select('*').order('created_at', { ascending: false });
-    if (error) { console.error('leads load error:', error); return; }
-    if (data) {
-      const mapped = data.map(mapLead);
-      setLeads(mapped);
-      setLeadsCount(mapped.length);
+    try {
+      const { data, error } = await supabase.from('leads').select('*').order('created_at', { ascending: false });
+      
+      let localList: LeadItem[] = [];
+      try {
+        const raw = localStorage.getItem('sanam_leads');
+        if (raw) localList = JSON.parse(raw);
+      } catch (e) {}
+
+      if (error) {
+        if (localList.length > 0) setLeads(localList);
+        return;
+      }
+
+      const dbMapped = (data || []).map(mapLead);
+      const dbIds = new Set(dbMapped.map((l) => l.id));
+      const missingInDb = localList.filter((l) => !dbIds.has(l.id));
+
+      if (missingInDb.length > 0) {
+        const rowsToInsert = missingInDb.map((l) => ({
+          id: l.id,
+          name: l.name,
+          phone: l.phone,
+          service: l.service,
+          message: l.message,
+          date: l.date,
+          status: l.status,
+        }));
+        await supabase.from('leads').upsert(rowsToInsert);
+      }
+
+      const finalCombined = [...dbMapped, ...missingInDb];
+      setLeads(finalCombined);
+      setLeadsCount(finalCombined.length);
+      localStorage.setItem('sanam_leads', JSON.stringify(finalCombined));
+    } catch (e) {
+      console.error('loadLeads exception:', e);
     }
   };
 
   const loadCalcInquiries = async () => {
-    const { data, error } = await supabase.from('calc_inquiries').select('*').order('created_at', { ascending: false });
-    if (error) { console.error('calc_inquiries load error:', error); return; }
-    if (data) {
-      const mapped = data.map(mapCalc);
-      setCalcInquiries(mapped);
-      setCalcCount(mapped.length);
+    try {
+      const { data, error } = await supabase.from('calc_inquiries').select('*').order('created_at', { ascending: false });
+      
+      let localList: CalcInquiry[] = [];
+      try {
+        const raw = localStorage.getItem('sanam_calc_inquiries');
+        if (raw) localList = JSON.parse(raw);
+      } catch (e) {}
+
+      if (error) {
+        if (localList.length > 0) setCalcInquiries(localList);
+        return;
+      }
+
+      const dbMapped = (data || []).map(mapCalc);
+      const dbIds = new Set(dbMapped.map((c) => c.id));
+      const missingInDb = localList.filter((c) => !dbIds.has(c.id));
+
+      if (missingInDb.length > 0) {
+        const rowsToInsert = missingInDb.map((c) => ({
+          id: c.id,
+          product_type: c.productType,
+          quantity: c.quantity,
+          estimated_days: c.estimatedDays,
+          phone: c.phone,
+          date: c.date,
+          status: c.status,
+        }));
+        await supabase.from('calc_inquiries').upsert(rowsToInsert);
+      }
+
+      const finalCombined = [...dbMapped, ...missingInDb];
+      setCalcInquiries(finalCombined);
+      setCalcCount(finalCombined.length);
+      localStorage.setItem('sanam_calc_inquiries', JSON.stringify(finalCombined));
+    } catch (e) {
+      console.error('loadCalcInquiries exception:', e);
+    }
+  };
+
+  // Explicit full sync method for Admin Panel button
+  const syncLocalStorageToSupabase = async (): Promise<{ success: boolean; message: string }> => {
+    try {
+      let totalPushed = 0;
+
+      // 1. Products
+      const rawProducts = localStorage.getItem('sanam_products_v3') || localStorage.getItem('sanam_products');
+      if (rawProducts) {
+        const pList: ProductItem[] = JSON.parse(rawProducts);
+        if (pList.length > 0) {
+          const rows = pList.map((p) => ({
+            id: p.id,
+            name: p.name,
+            category: p.category,
+            description: p.desc,
+            image_url: p.imageUrl,
+            images: p.images ?? [],
+            model: p.model,
+            sizes: p.sizes,
+            material: p.material,
+            price: p.price,
+            badge: p.badge ?? '',
+          }));
+          await supabase.from('products').upsert(rows);
+          totalPushed += rows.length;
+        }
+      }
+
+      // 2. Categories
+      const rawCategories = localStorage.getItem('sanam_categories');
+      if (rawCategories) {
+        const cList: CategoryItem[] = JSON.parse(rawCategories);
+        if (cList.length > 0) {
+          const rows = cList.map((c) => ({
+            id: c.id,
+            key: c.key,
+            label: c.label,
+          }));
+          await supabase.from('categories').upsert(rows);
+          totalPushed += rows.length;
+        }
+      }
+
+      // 3. News
+      const rawNews = localStorage.getItem('sanam_news');
+      if (rawNews) {
+        const nList: NewsItem[] = JSON.parse(rawNews);
+        if (nList.length > 0) {
+          const rows = nList.map((n) => ({
+            id: n.id,
+            title: n.title,
+            date: n.date,
+            category: n.category,
+            summary: n.summary,
+            content: n.content,
+            image_url: n.imageUrl ?? null,
+            video_url: n.videoUrl ?? null,
+          }));
+          await supabase.from('news').upsert(rows);
+          totalPushed += rows.length;
+        }
+      }
+
+      // 4. Team
+      const rawTeam = localStorage.getItem('sanam_team');
+      if (rawTeam) {
+        const tList: TeamMember[] = JSON.parse(rawTeam);
+        if (tList.length > 0) {
+          const rows = tList.map((t) => ({
+            id: t.id,
+            name: t.name,
+            role: t.role,
+            image_url: t.imageUrl ?? null,
+            phone: t.phone ?? null,
+          }));
+          await supabase.from('team_members').upsert(rows);
+          totalPushed += rows.length;
+        }
+      }
+
+      // 5. Feedbacks
+      const rawFb = localStorage.getItem('sanam_feedbacks');
+      if (rawFb) {
+        const fList: FeedbackItem[] = JSON.parse(rawFb);
+        if (fList.length > 0) {
+          const rows = fList.map((f) => ({
+            id: f.id,
+            name: f.name,
+            rating: f.rating,
+            text: f.text,
+            date: f.date,
+            approved: f.approved,
+          }));
+          await supabase.from('feedbacks').upsert(rows);
+          totalPushed += rows.length;
+        }
+      }
+
+      // Reload all
+      await loadAllData();
+      return {
+        success: true,
+        message: `Muvaffaqiyatli! LocalStoragedan ${totalPushed} ta ma'lumot Supabase bazasiga yuklandi.`,
+      };
+    } catch (err: any) {
+      console.error('syncLocalStorageToSupabase error:', err);
+      return {
+        success: false,
+        message: `Xatolik yuz berdi: ${err?.message || 'Noma\'lum xato'}`,
+      };
     }
   };
 
@@ -376,33 +786,44 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // ==================== CATEGORIES CRUD ====================
   const addCategory = async (cat: Omit<CategoryItem, 'id'>) => {
     const newItem: CategoryItem = { ...cat, id: 'cat-' + Date.now() };
+    const updated = [...categories, newItem];
+    setCategories(updated);
+    localStorage.setItem('sanam_categories', JSON.stringify(updated));
     const { error } = await supabase.from('categories').insert({
       id: newItem.id,
       key: newItem.key,
       label: newItem.label,
     });
-    if (error) { console.error('addCategory error:', error); return; }
-    setCategories((prev) => [...prev, newItem]);
+    if (error) { console.error('addCategory error:', error); }
   };
 
   const updateCategory = async (id: string, updatedFields: Partial<CategoryItem>) => {
+    const updated = categories.map((c) => (c.id === id ? { ...c, ...updatedFields } : c));
+    setCategories(updated);
+    localStorage.setItem('sanam_categories', JSON.stringify(updated));
+
     const dbFields: any = {};
     if (updatedFields.key !== undefined) dbFields.key = updatedFields.key;
     if (updatedFields.label !== undefined) dbFields.label = updatedFields.label;
     const { error } = await supabase.from('categories').update(dbFields).eq('id', id);
-    if (error) { console.error('updateCategory error:', error); return; }
-    setCategories((prev) => prev.map((c) => (c.id === id ? { ...c, ...updatedFields } : c)));
+    if (error) { console.error('updateCategory error:', error); }
   };
 
   const deleteCategory = async (id: string) => {
+    const updated = categories.filter((c) => c.id !== id);
+    setCategories(updated);
+    localStorage.setItem('sanam_categories', JSON.stringify(updated));
     const { error } = await supabase.from('categories').delete().eq('id', id);
-    if (error) { console.error('deleteCategory error:', error); return; }
-    setCategories((prev) => prev.filter((c) => c.id !== id));
+    if (error) { console.error('deleteCategory error:', error); }
   };
 
   // ==================== PRODUCTS CRUD ====================
   const addProduct = async (product: Omit<ProductItem, 'id'>) => {
     const newItem: ProductItem = { ...product, id: 'prod-' + Date.now() };
+    const updated = [newItem, ...products];
+    setProducts(updated);
+    localStorage.setItem('sanam_products_v3', JSON.stringify(updated));
+
     const { error } = await supabase.from('products').insert({
       id: newItem.id,
       name: newItem.name,
@@ -416,11 +837,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       price: newItem.price,
       badge: newItem.badge ?? '',
     });
-    if (error) { console.error('addProduct error:', error); return; }
-    setProducts((prev) => [newItem, ...prev]);
+    if (error) { console.error('addProduct error:', error); }
   };
 
   const updateProduct = async (id: string, updatedFields: Partial<ProductItem>) => {
+    const updated = products.map((p) => (p.id === id ? { ...p, ...updatedFields } : p));
+    setProducts(updated);
+    localStorage.setItem('sanam_products_v3', JSON.stringify(updated));
+
     const dbFields: any = {};
     if (updatedFields.name !== undefined) dbFields.name = updatedFields.name;
     if (updatedFields.category !== undefined) dbFields.category = updatedFields.category;
@@ -433,19 +857,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (updatedFields.price !== undefined) dbFields.price = updatedFields.price;
     if (updatedFields.badge !== undefined) dbFields.badge = updatedFields.badge;
     const { error } = await supabase.from('products').update(dbFields).eq('id', id);
-    if (error) { console.error('updateProduct error:', error); return; }
-    setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, ...updatedFields } : p)));
+    if (error) { console.error('updateProduct error:', error); }
   };
 
   const deleteProduct = async (id: string) => {
+    const updated = products.filter((p) => p.id !== id);
+    setProducts(updated);
+    localStorage.setItem('sanam_products_v3', JSON.stringify(updated));
     const { error } = await supabase.from('products').delete().eq('id', id);
-    if (error) { console.error('deleteProduct error:', error); return; }
-    setProducts((prev) => prev.filter((p) => p.id !== id));
+    if (error) { console.error('deleteProduct error:', error); }
   };
 
   // ==================== NEWS CRUD ====================
   const addNews = async (news: Omit<NewsItem, 'id'>) => {
     const newItem: NewsItem = { ...news, id: 'news-' + Date.now() };
+    const updated = [newItem, ...newsList];
+    setNewsList(updated);
+    localStorage.setItem('sanam_news', JSON.stringify(updated));
+
     const { error } = await supabase.from('news').insert({
       id: newItem.id,
       title: newItem.title,
@@ -456,11 +885,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       image_url: newItem.imageUrl ?? null,
       video_url: newItem.videoUrl ?? null,
     });
-    if (error) { console.error('addNews error:', error); return; }
-    setNewsList((prev) => [newItem, ...prev]);
+    if (error) { console.error('addNews error:', error); }
   };
 
   const updateNews = async (id: string, updatedFields: Partial<NewsItem>) => {
+    const updated = newsList.map((n) => (n.id === id ? { ...n, ...updatedFields } : n));
+    setNewsList(updated);
+    localStorage.setItem('sanam_news', JSON.stringify(updated));
+
     const dbFields: any = {};
     if (updatedFields.title !== undefined) dbFields.title = updatedFields.title;
     if (updatedFields.date !== undefined) dbFields.date = updatedFields.date;
@@ -470,19 +902,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (updatedFields.imageUrl !== undefined) dbFields.image_url = updatedFields.imageUrl;
     if (updatedFields.videoUrl !== undefined) dbFields.video_url = updatedFields.videoUrl;
     const { error } = await supabase.from('news').update(dbFields).eq('id', id);
-    if (error) { console.error('updateNews error:', error); return; }
-    setNewsList((prev) => prev.map((n) => (n.id === id ? { ...n, ...updatedFields } : n)));
+    if (error) { console.error('updateNews error:', error); }
   };
 
   const deleteNews = async (id: string) => {
+    const updated = newsList.filter((n) => n.id !== id);
+    setNewsList(updated);
+    localStorage.setItem('sanam_news', JSON.stringify(updated));
     const { error } = await supabase.from('news').delete().eq('id', id);
-    if (error) { console.error('deleteNews error:', error); return; }
-    setNewsList((prev) => prev.filter((n) => n.id !== id));
+    if (error) { console.error('deleteNews error:', error); }
   };
 
   // ==================== TEAM CRUD ====================
   const addTeamMember = async (member: Omit<TeamMember, 'id'>) => {
     const newItem: TeamMember = { ...member, id: 'team-' + Date.now() };
+    const updated = [...teamList, newItem];
+    setTeamList(updated);
+    localStorage.setItem('sanam_team', JSON.stringify(updated));
+
     const { error } = await supabase.from('team_members').insert({
       id: newItem.id,
       name: newItem.name,
@@ -490,25 +927,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       image_url: newItem.imageUrl ?? null,
       phone: newItem.phone ?? null,
     });
-    if (error) { console.error('addTeamMember error:', error); return; }
-    setTeamList((prev) => [...prev, newItem]);
+    if (error) { console.error('addTeamMember error:', error); }
   };
 
   const updateTeamMember = async (id: string, updatedFields: Partial<TeamMember>) => {
+    const updated = teamList.map((t) => (t.id === id ? { ...t, ...updatedFields } : t));
+    setTeamList(updated);
+    localStorage.setItem('sanam_team', JSON.stringify(updated));
+
     const dbFields: any = {};
     if (updatedFields.name !== undefined) dbFields.name = updatedFields.name;
     if (updatedFields.role !== undefined) dbFields.role = updatedFields.role;
     if (updatedFields.imageUrl !== undefined) dbFields.image_url = updatedFields.imageUrl;
     if (updatedFields.phone !== undefined) dbFields.phone = updatedFields.phone;
     const { error } = await supabase.from('team_members').update(dbFields).eq('id', id);
-    if (error) { console.error('updateTeamMember error:', error); return; }
-    setTeamList((prev) => prev.map((t) => (t.id === id ? { ...t, ...updatedFields } : t)));
+    if (error) { console.error('updateTeamMember error:', error); }
   };
 
   const deleteTeamMember = async (id: string) => {
+    const updated = teamList.filter((t) => t.id !== id);
+    setTeamList(updated);
+    localStorage.setItem('sanam_team', JSON.stringify(updated));
+
     const { error } = await supabase.from('team_members').delete().eq('id', id);
-    if (error) { console.error('deleteTeamMember error:', error); return; }
-    setTeamList((prev) => prev.filter((t) => t.id !== id));
+    if (error) { console.error('deleteTeamMember error:', error); }
   };
 
   // ==================== LEADS ====================
@@ -519,6 +961,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       date: new Date().toISOString().split('T')[0],
       status: 'new',
     };
+    const updated = [newItem, ...leads];
+    setLeads(updated);
+    localStorage.setItem('sanam_leads', JSON.stringify(updated));
+
     const { error } = await supabase.from('leads').insert({
       id: newItem.id,
       name: newItem.name,
@@ -528,8 +974,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       date: newItem.date,
       status: newItem.status,
     });
-    if (error) { console.error('addLead error:', error); return; }
-    setLeads((prev) => [newItem, ...prev]);
+    if (error) { console.error('addLead error:', error); }
     incrementLeads();
   };
 
@@ -540,6 +985,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       date: new Date().toISOString().split('T')[0],
       status: 'new',
     };
+    const updated = [newItem, ...calcInquiries];
+    setCalcInquiries(updated);
+    localStorage.setItem('sanam_calc_inquiries', JSON.stringify(updated));
+
     const { error } = await supabase.from('calc_inquiries').insert({
       id: newItem.id,
       product_type: newItem.productType,
@@ -549,41 +998,46 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       date: newItem.date,
       status: newItem.status,
     });
-    if (error) { console.error('addCalcInquiry error:', error); return; }
-    setCalcInquiries((prev) => [newItem, ...prev]);
+    if (error) { console.error('addCalcInquiry error:', error); }
     incrementCalc();
   };
 
   const updateLeadStatus = async (id: string, status: LeadItem['status']) => {
+    const updated = leads.map((l) => (l.id === id ? { ...l, status } : l));
+    setLeads(updated);
+    localStorage.setItem('sanam_leads', JSON.stringify(updated));
+
     const { error } = await supabase.from('leads').update({ status }).eq('id', id);
-    if (error) { console.error('updateLeadStatus error:', error); return; }
-    setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status } : l)));
+    if (error) { console.error('updateLeadStatus error:', error); }
   };
 
   const updateCalcStatus = async (id: string, status: CalcInquiry['status']) => {
+    const updated = calcInquiries.map((c) => (c.id === id ? { ...c, status } : c));
+    setCalcInquiries(updated);
+    localStorage.setItem('sanam_calc_inquiries', JSON.stringify(updated));
+
     const { error } = await supabase.from('calc_inquiries').update({ status }).eq('id', id);
-    if (error) { console.error('updateCalcStatus error:', error); return; }
-    setCalcInquiries((prev) => prev.map((c) => (c.id === id ? { ...c, status } : c)));
+    if (error) { console.error('updateCalcStatus error:', error); }
   };
 
   const deleteLead = async (id: string) => {
+    const updated = leads.filter((l) => l.id !== id);
+    setLeads(updated);
+    setLeadsCount(updated.length);
+    localStorage.setItem('sanam_leads', JSON.stringify(updated));
+
     const { error } = await supabase.from('leads').delete().eq('id', id);
-    if (error) { console.error('deleteLead error:', error); return; }
-    setLeads((prev) => {
-      const updated = prev.filter((l) => l.id !== id);
-      setLeadsCount(updated.length);
-      return updated;
-    });
+    if (error) { console.error('deleteLead error:', error); }
   };
 
   const deleteCalcInquiry = async (id: string) => {
+    const updated = calcInquiries.filter((c) => c.id !== id);
+    setCalcInquiries(updated);
+    setCalcCount(updated.length);
+    localStorage.setItem('sanam_calc_inquiries', JSON.stringify(updated));
+
     const { error } = await supabase.from('calc_inquiries').delete().eq('id', id);
-    if (error) { console.error('deleteCalcInquiry error:', error); return; }
-    setCalcInquiries((prev) => {
-      const updated = prev.filter((c) => c.id !== id);
-      setCalcCount(updated.length);
-      return updated;
-    });
+    if (error) { console.error('deleteCalcInquiry error:', error); }
   };
 
   // ==================== FEEDBACKS ====================
@@ -594,6 +1048,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       date: new Date().toISOString().split('T')[0],
       approved: false,
     };
+    const updated = [newItem, ...feedbacks];
+    setFeedbacks(updated);
+    localStorage.setItem('sanam_feedbacks', JSON.stringify(updated));
+
     const { error } = await supabase.from('feedbacks').insert({
       id: newItem.id,
       name: newItem.name,
@@ -602,23 +1060,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       date: newItem.date,
       approved: newItem.approved,
     });
-    if (error) { console.error('addFeedback error:', error); return; }
-    setFeedbacks((prev) => [newItem, ...prev]);
+    if (error) { console.error('addFeedback error:', error); }
   };
 
   const toggleApproveFeedback = async (id: string) => {
     const fb = feedbacks.find((f) => f.id === id);
     if (!fb) return;
     const newApproved = !fb.approved;
+    const updated = feedbacks.map((f) => (f.id === id ? { ...f, approved: newApproved } : f));
+    setFeedbacks(updated);
+    localStorage.setItem('sanam_feedbacks', JSON.stringify(updated));
+
     const { error } = await supabase.from('feedbacks').update({ approved: newApproved }).eq('id', id);
-    if (error) { console.error('toggleApproveFeedback error:', error); return; }
-    setFeedbacks((prev) => prev.map((f) => (f.id === id ? { ...f, approved: newApproved } : f)));
+    if (error) { console.error('toggleApproveFeedback error:', error); }
   };
 
   const deleteFeedback = async (id: string) => {
+    const updated = feedbacks.filter((f) => f.id !== id);
+    setFeedbacks(updated);
+    localStorage.setItem('sanam_feedbacks', JSON.stringify(updated));
+
     const { error } = await supabase.from('feedbacks').delete().eq('id', id);
-    if (error) { console.error('deleteFeedback error:', error); return; }
-    setFeedbacks((prev) => prev.filter((f) => f.id !== id));
+    if (error) { console.error('deleteFeedback error:', error); }
   };
 
   return (
@@ -663,6 +1126,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         toggleApproveFeedback,
         deleteFeedback,
         isLoading,
+        syncLocalStorageToSupabase,
       }}
     >
       {children}

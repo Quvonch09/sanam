@@ -55,6 +55,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
     deleteCalcInquiry,
     toggleApproveFeedback,
     deleteFeedback,
+    syncLocalStorageToSupabase,
   } = useApp();
 
   const tAdmin = translations[currentLang].admin;
@@ -62,6 +63,17 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'categories' | 'team' | 'news' | 'leads' | 'feedback'>('dashboard');
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncNotice, setSyncNotice] = useState<string | null>(null);
+
+  const handleSyncToSupabase = async () => {
+    setIsSyncing(true);
+    setSyncNotice(null);
+    const result = await syncLocalStorageToSupabase();
+    setIsSyncing(false);
+    setSyncNotice(result.message);
+    setTimeout(() => setSyncNotice(null), 6000);
+  };
 
   // Modals visibility state
   const [showProductModal, setShowProductModal] = useState(false);
@@ -482,6 +494,20 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
               )}
             </div>
 
+            {/* Sync LocalStorage to Supabase Button */}
+            <button
+              onClick={handleSyncToSupabase}
+              disabled={isSyncing}
+              className={`flex items-center gap-1.5 px-3 py-2 text-xs font-extrabold rounded-xl border transition-all ${
+                isSyncing
+                  ? 'bg-amber-500/20 text-amber-400 border-amber-500/30 animate-pulse'
+                  : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/20'
+              }`}
+              title="LocalStoragedagi barcha ma'lumotlarni Supabase bazasiga yuklash"
+            >
+              <span>{isSyncing ? '⏳ Tiklanmoqda...' : '🔄 LocalStoragedan Bazaga Tiklash'}</span>
+            </button>
+
             {/* Site Link — hidden on mobile */}
             <Link
               href="/"
@@ -511,6 +537,13 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
         {/* SCROLLABLE CONTENT */}
         <main className="flex-1 p-4 sm:p-6 lg:p-10 space-y-8 overflow-y-auto">
+        
+        {syncNotice && (
+          <div className="p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-xs font-bold flex items-center justify-between animate-in fade-in">
+            <span>{syncNotice}</span>
+            <button onClick={() => setSyncNotice(null)} className="text-slate-400 hover:text-white">✕</button>
+          </div>
+        )}
         
         {/* DASHBOARD TAB */}
         {activeTab === 'dashboard' && (
