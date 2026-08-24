@@ -373,9 +373,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       const dbMapped = (data || []).map(mapProduct);
       const dbIds = new Set(dbMapped.map((p) => p.id));
-
-      // Items in localStorage or initial list not yet in Supabase
-      const candidateList = localList.length > 0 ? localList : initialProducts;
+      const candidateMap = new Map<string, ProductItem>();
+      [...initialProducts, ...localList].forEach((p) => candidateMap.set(p.id, p));
+      const candidateList = Array.from(candidateMap.values());
       const missingInDb = candidateList.filter((p) => !dbIds.has(p.id));
 
       if (missingInDb.length > 0) {
@@ -422,7 +422,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       const dbMapped = (data || []).map(mapCategory);
       const dbIds = new Set(dbMapped.map((c) => c.id));
-      const candidateList = localList.length > 0 ? localList : initialCategories;
+      const candidateMap = new Map<string, CategoryItem>();
+      [...initialCategories, ...localList].forEach((c) => candidateMap.set(c.id, c));
+      const candidateList = Array.from(candidateMap.values());
       const missingInDb = candidateList.filter((c) => !dbIds.has(c.id));
 
       if (missingInDb.length > 0) {
@@ -460,7 +462,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       const dbMapped = (data || []).map(mapNews);
       const dbIds = new Set(dbMapped.map((n) => n.id));
-      const candidateList = localList.length > 0 ? localList : initialNews;
+      const candidateMap = new Map<string, NewsItem>();
+      [...initialNews, ...localList].forEach((n) => candidateMap.set(n.id, n));
+      const candidateList = Array.from(candidateMap.values());
       const missingInDb = candidateList.filter((n) => !dbIds.has(n.id));
 
       if (missingInDb.length > 0) {
@@ -503,7 +507,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       const dbMapped = (data || []).map(mapTeam);
       const dbIds = new Set(dbMapped.map((t) => t.id));
-      const candidateList = localList.length > 0 ? localList : initialTeam;
+      const candidateMap = new Map<string, TeamMember>();
+      [...initialTeam, ...localList].forEach((t) => candidateMap.set(t.id, t));
+      const candidateList = Array.from(candidateMap.values());
       const missingInDb = candidateList.filter((t) => !dbIds.has(t.id));
 
       if (missingInDb.length > 0) {
@@ -655,78 +661,102 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       let totalPushed = 0;
 
       // 1. Products
+      let pList: ProductItem[] = [...initialProducts];
       const rawProducts = localStorage.getItem('sanam_products_v3') || localStorage.getItem('sanam_products');
       if (rawProducts) {
-        const pList: ProductItem[] = JSON.parse(rawProducts);
-        if (pList.length > 0) {
-          const rows = pList.map((p) => ({
-            id: p.id,
-            name: p.name,
-            category: p.category,
-            description: p.desc,
-            image_url: p.imageUrl,
-            images: p.images ?? [],
-            model: p.model,
-            sizes: p.sizes,
-            material: p.material,
-            price: p.price,
-            badge: p.badge ?? '',
-          }));
-          await supabase.from('products').upsert(rows);
-          totalPushed += rows.length;
-        }
+        try {
+          const parsed = JSON.parse(rawProducts);
+          const map = new Map<string, ProductItem>();
+          [...initialProducts, ...parsed].forEach((p) => map.set(p.id, p));
+          pList = Array.from(map.values());
+        } catch (e) {}
+      }
+      if (pList.length > 0) {
+        const rows = pList.map((p) => ({
+          id: p.id,
+          name: p.name,
+          category: p.category,
+          description: p.desc,
+          image_url: p.imageUrl,
+          images: p.images ?? [],
+          model: p.model,
+          sizes: p.sizes,
+          material: p.material,
+          price: p.price,
+          badge: p.badge ?? '',
+        }));
+        await supabase.from('products').upsert(rows);
+        totalPushed += rows.length;
       }
 
       // 2. Categories
+      let cList: CategoryItem[] = [...initialCategories];
       const rawCategories = localStorage.getItem('sanam_categories');
       if (rawCategories) {
-        const cList: CategoryItem[] = JSON.parse(rawCategories);
-        if (cList.length > 0) {
-          const rows = cList.map((c) => ({
-            id: c.id,
-            key: c.key,
-            label: c.label,
-          }));
-          await supabase.from('categories').upsert(rows);
-          totalPushed += rows.length;
-        }
+        try {
+          const parsed = JSON.parse(rawCategories);
+          const map = new Map<string, CategoryItem>();
+          [...initialCategories, ...parsed].forEach((c) => map.set(c.id, c));
+          cList = Array.from(map.values());
+        } catch (e) {}
+      }
+      if (cList.length > 0) {
+        const rows = cList.map((c) => ({
+          id: c.id,
+          key: c.key,
+          label: c.label,
+        }));
+        await supabase.from('categories').upsert(rows);
+        totalPushed += rows.length;
       }
 
       // 3. News
+      let nList: NewsItem[] = [...initialNews];
       const rawNews = localStorage.getItem('sanam_news');
       if (rawNews) {
-        const nList: NewsItem[] = JSON.parse(rawNews);
-        if (nList.length > 0) {
-          const rows = nList.map((n) => ({
-            id: n.id,
-            title: n.title,
-            date: n.date,
-            category: n.category,
-            summary: n.summary,
-            content: n.content,
-            image_url: n.imageUrl ?? null,
-            video_url: n.videoUrl ?? null,
-          }));
-          await supabase.from('news').upsert(rows);
-          totalPushed += rows.length;
-        }
+        try {
+          const parsed = JSON.parse(rawNews);
+          const map = new Map<string, NewsItem>();
+          [...initialNews, ...parsed].forEach((n) => map.set(n.id, n));
+          nList = Array.from(map.values());
+        } catch (e) {}
+      }
+      if (nList.length > 0) {
+        const rows = nList.map((n) => ({
+          id: n.id,
+          title: n.title,
+          date: n.date,
+          category: n.category,
+          summary: n.summary,
+          content: n.content,
+          image_url: n.imageUrl ?? null,
+          video_url: n.videoUrl ?? null,
+        }));
+        await supabase.from('news').upsert(rows);
+        totalPushed += rows.length;
       }
 
       // 4. Team
+      let tList: TeamMember[] = [...initialTeam];
       const rawTeam = localStorage.getItem('sanam_team');
       if (rawTeam) {
-        const tList: TeamMember[] = JSON.parse(rawTeam);
-        if (tList.length > 0) {
-          const rows = tList.map((t) => ({
-            id: t.id,
-            name: t.name,
-            role: t.role,
-            image_url: t.imageUrl ?? null,
-            phone: t.phone ?? null,
-          }));
-          await supabase.from('team_members').upsert(rows);
-          totalPushed += rows.length;
-        }
+        try {
+          const parsed = JSON.parse(rawTeam);
+          const map = new Map<string, TeamMember>();
+          [...initialTeam, ...parsed].forEach((t) => map.set(t.id, t));
+          tList = Array.from(map.values());
+        } catch (e) {}
+      }
+      if (tList.length > 0) {
+        const rows = tList.map((t) => ({
+          id: t.id,
+          name: t.name,
+          role: t.role,
+          image_url: t.imageUrl ?? null,
+          phone: t.phone ?? null,
+        }));
+        await supabase.from('team_members').upsert(rows);
+        totalPushed += rows.length;
       }
 
       // 5. Feedbacks
