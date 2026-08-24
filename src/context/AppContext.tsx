@@ -110,20 +110,52 @@ const initialTeam: TeamMember[] = [
 
 const initialNews: NewsItem[] = [
   {
+    id: 'news-vacany-2026',
+    title: 'SANAM Tikuvchilik Fabrikasi Tajribali Tikuvchilarni Ishga Taklif Qiladi!',
+    date: '2026-08-24',
+    category: 'Vakansiya',
+    summary: '3 000 000 – 3 500 000 so\'m oylik, bepul tushlik, yotoqxona, bog\'cha va bepul xizmat avtobusi bilan ishga taklif qilamiz.',
+    content: 'SANAM Tikuvchilik Fabrikasi tajribali tikuvchilarni ishga taklif etadi! Davlat buyurtmalari asosida erkaklar ko\'ylaklari, maktab formalari, kurtkalar, mudofaa va IIV xodimlari dalaviy formalari va eksport ishchi kiyimlari tikiladi.\n\n💰 Oylik maosh: 3 000 000 – 3 500 000 so\'m (Ishbay 08:00-17:00)\n\n🎁 Bepul sharoitlar:\n- 150 o\'rinli oshxonada bepul tushlik\n- 20 o\'rinli yotoqxona va 20 o\'rinli bog\'cha\n- Qarshi tumanining Xonyon, Ertepa, Mirmiron, Avrora, Kochkak, Kamandi, Boston yo\'nalishida bepul xizmat avtobusi!\n\n📍 Manzil: Qarshi sh., I.Karimov k., 221-uy.\n📞 Tel: +998 88 805 22 28, +998 97 902 18 18, +998 75 221 75 65',
+  },
+  {
+    id: 'news-store-school',
+    title: 'Sanam Tikuvchilik Fabrikasi Savdo Do\'koni va Maktab Formalari',
+    date: '2026-08-22',
+    category: 'Savdo do\'koni',
+    summary: 'Qarshi shahridagi do\'konimizda erkaklar klassik ko\'ylaklari (40.000 so\'m) va maktab formalari (200.000 so\'m) sotuvda!',
+    content: '🏢 Sanam Tikuvchilik Fabrikasi savdo do\'koni Qarshi shahrida sizning xizmatingizda!\n\n👔 Keng assortimentda:\n- Erkaklar uchun klassik oq va rangli ko\'ylaklar (40.000 so\'m)\n- Maktab formalari to\'plami (200.000 so\'m)\n- Korxona, shifoxona, harbiy va qo\'riqlash xizmati uniformalari\n\n✂️ O\'z o\'lchamingizda, istalgan uslubda va sifatli matolardan tikib beriladi!\n📞 Buyurtma uchun: +998 90 313 77 88 / +998 87 805 66 66',
+  },
+  {
+    id: 'news-jeans-turkish',
+    title: 'Erkaklar Uchun Jinsi Dvoyka - Turkiya Stili',
+    date: '2026-08-18',
+    category: 'Yangi to\'plam',
+    summary: 'Turkiya stili asosida tikilgan 48-56 razmerdagi zamonaviy va chidamli erkaklar jinsi dvoyka to\'plami sotuvda.',
+    content: 'Erkaklar uchun jinsi dvoyka Turkiya stili asosida tikilgan.\nRazmer: 48-56 razmergacha sotuvda bor.\nIkki xil ko\'rkam ranglari mavjud.\nSifatli 100% denim matosi va qulay bichim.\n\n☎️ Buyurtma uchun: +998 87 805 66 66',
+  },
+  {
+    id: 'news-quality-principle',
+    title: 'Sifat — Bizning Ustuvor Tamoyilimiz!',
+    date: '2026-08-12',
+    category: 'Sifat nazorati',
+    summary: 'Sanam tikuvchilik fabrikasida har bir mahsulot mijoz qo\'liga yetib borishidan oldin sifat nazoratidan puxta o\'tkaziladi.',
+    content: '✅ Sifat — bizning ustuvor tamoyilimiz!\nSanam tikuvchilik fabrikasida har bir mahsulot mijoz qo\'liga yetib borishidan oldin sifat nazoratidan puxta o\'tkaziladi.\n✨ Sifat tasodif emas, u mehnat va mas\'uliyat natijasidir.\n\n📩 Buyurtmalar va hamkorlik uchun biz bilan bog\'laning!',
+  },
+  {
+    id: 'news-special-uniforms',
+    title: 'Sifatli va Qulay Maxsus Ish Kiyimlari',
+    date: '2026-08-08',
+    category: 'Spetsodejda',
+    summary: 'Sanoat korxonalari, tibbiyot, harbiy va qo\'riqlash xizmatlari uchun maxsus ish kiyimlari va uniformalar.',
+    content: 'Siz sifatli va qulay maxsus ish kiyimlarini izlayapsizmi? Unda Sanam tikuvchilik fabrikasining savdo do\'koniga tashrif buyuring!\n\nBizda:\n- Korxona va tashkilotlar uchun maxsus ish kiyimlari\n- Tibbiyot xodimlari formasi\n- Harbiy va qo\'riqlash xizmati kiyimlari\n- Erkaklar klassik ko\'ylaklari\n\n📍 Manzil: Qarshi shahri, Sanam tikuvchilik fabrikasi savdo do\'koni.',
+  },
+  {
     id: 'news-1',
     title: 'SANAM Fabrikasiga Yangi Yapon Tikuv Komplekslari Keltirildi',
     date: '2026-07-28',
     category: 'Texnologiya',
     summary: 'Fabrikamiz ishlab chiqarish unumdorligini 40% ga oshiradigan avtomatlashtirilgan yangi dastgohlarni ishga tushirdi.',
     content: 'SANAM OFFICIAL fabrikasi Qashqadaryo viloyatida eng zamonaviy tikuv uskunalarini ornatishda davom etmoqda.',
-  },
-  {
-    id: 'news-2',
-    title: 'Korporativ Uniforma Tikish Boyicha Katta Shartnoma Imzolandi',
-    date: '2026-07-15',
-    category: 'Hamkorlik',
-    summary: 'Qarshi shahridagi yirik sanoat korxonasi uchun 2000 dan ortiq maxsus ishchi kiyimlari tayyorlanmoqda.',
-    content: 'SANAM Garment Factory hududiy korxonalar uchun sifatli va chidamli ishchi uniformalarini ishlab chiqarishda yetakchilikni saqlab qolmoqda.',
   },
 ];
 
