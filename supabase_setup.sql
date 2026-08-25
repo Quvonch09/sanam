@@ -107,3 +107,27 @@ ALTER PUBLICATION supabase_realtime ADD TABLE categories;
 ALTER PUBLICATION supabase_realtime ADD TABLE news;
 ALTER PUBLICATION supabase_realtime ADD TABLE team_members;
 ALTER PUBLICATION supabase_realtime ADD TABLE feedbacks;
+
+-- 8. Supabase Storage Policies for 'sanam' bucket
+-- These policies allow public users to upload, read, update, and delete files in the 'sanam' bucket.
+-- Make sure the bucket 'sanam' is created and marked as public in the Supabase Dashboard.
+
+CREATE POLICY "Allow public insert to sanam bucket"
+ON storage.objects FOR INSERT
+TO public
+WITH CHECK (bucket_id = 'sanam');
+
+CREATE POLICY "Allow public select to sanam bucket"
+ON storage.objects FOR SELECT
+TO public
+USING (bucket_id = 'sanam');
+
+CREATE POLICY "Allow public update to sanam bucket"
+ON storage.objects FOR UPDATE
+TO public
+USING (bucket_id = 'sanam');
+
+CREATE POLICY "Allow public delete to sanam bucket"
+ON storage.objects FOR DELETE
+TO public
+USING (bucket_id = 'sanam');
