@@ -49,15 +49,26 @@ export const NewsSection: React.FC<NewsSectionProps> = ({ currentLang }) => {
               }`}
             >
               <div className="p-6 space-y-4">
-                {item.imageUrl ? (
-                  <img src={item.imageUrl} alt={item.title} className="w-full h-48 object-cover rounded-2xl border border-slate-800" />
-                ) : item.videoUrl ? (
-                  <div className="relative w-full h-48 rounded-2xl overflow-hidden border border-slate-800 bg-slate-950">
-                    <video src={item.videoUrl} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                      <span className="p-3.5 rounded-full bg-black/70 text-[#FFC107] text-sm font-bold shadow-md hover:scale-110 transition-transform">▶</span>
+                {item.videoUrl ? (
+                  <div
+                    onClick={() => setSelectedNews(item)}
+                    className="relative w-full h-48 rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 group/vid cursor-pointer"
+                  >
+                    <video
+                      src={item.videoUrl}
+                      preload="metadata"
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover/vid:bg-black/20 transition-colors">
+                      <span className="w-12 h-12 rounded-full bg-[#FFC107] text-[#1E1A5B] text-base font-black shadow-xl group-hover/vid:scale-110 transition-transform flex items-center justify-center pl-1">
+                        ▶
+                      </span>
                     </div>
                   </div>
+                ) : item.imageUrl ? (
+                  <img src={item.imageUrl} alt={item.title} className="w-full h-48 object-cover rounded-2xl border border-slate-800" />
                 ) : null}
 
                 <div className="flex items-center justify-between text-xs font-semibold">
@@ -128,8 +139,22 @@ export const NewsSection: React.FC<NewsSectionProps> = ({ currentLang }) => {
             </h3>
 
             {/* News Media Area */}
-            {(selectedNews.imageUrl || selectedNews.videoUrl) && (
+            {(selectedNews.videoUrl || selectedNews.imageUrl) && (
               <div className="space-y-4 my-2">
+                {selectedNews.videoUrl && (
+                  <div className={`rounded-2xl overflow-hidden border bg-black shadow-xl ${
+                    isDarkMode ? 'border-slate-800' : 'border-slate-200'
+                  }`}>
+                    <video
+                      src={selectedNews.videoUrl}
+                      controls
+                      autoPlay
+                      preload="metadata"
+                      playsInline
+                      className="w-full max-h-96 mx-auto object-contain"
+                    />
+                  </div>
+                )}
                 {selectedNews.imageUrl && (
                   <img
                     src={selectedNews.imageUrl}
@@ -138,13 +163,6 @@ export const NewsSection: React.FC<NewsSectionProps> = ({ currentLang }) => {
                       isDarkMode ? 'border-slate-800' : 'border-slate-200'
                     }`}
                   />
-                )}
-                {selectedNews.videoUrl && (
-                  <div className={`rounded-2xl overflow-hidden border bg-slate-950 ${
-                    isDarkMode ? 'border-slate-800' : 'border-slate-200'
-                  }`}>
-                    <video src={selectedNews.videoUrl} controls className="w-full max-h-96 mx-auto object-contain" />
-                  </div>
                 )}
               </div>
             )}
