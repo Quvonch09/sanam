@@ -50,9 +50,9 @@ export const NewsSection: React.FC<NewsSectionProps> = ({ currentLang }) => {
             >
               <div className="p-6 space-y-4">
                 {item.imageUrl ? (
-                  <img src={item.imageUrl} alt={item.title} className="w-full h-44 object-cover rounded-2xl border border-slate-800" />
+                  <img src={item.imageUrl} alt={item.title} className="w-full h-48 object-cover rounded-2xl border border-slate-800" />
                 ) : item.videoUrl ? (
-                  <div className="relative w-full h-44 rounded-2xl overflow-hidden border border-slate-800 bg-slate-950">
+                  <div className="relative w-full h-48 rounded-2xl overflow-hidden border border-slate-800 bg-slate-950">
                     <video src={item.videoUrl} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/40">
                       <span className="p-3.5 rounded-full bg-black/70 text-[#FFC107] text-sm font-bold shadow-md hover:scale-110 transition-transform">▶</span>
@@ -102,45 +102,67 @@ export const NewsSection: React.FC<NewsSectionProps> = ({ currentLang }) => {
           <div className={`rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-6 relative max-h-[90vh] overflow-y-auto shadow-2xl ${
             isDarkMode ? 'bg-slate-900 border border-slate-800 text-white' : 'bg-white text-slate-900'
           }`}>
-            <div className="flex items-center justify-between border-b border-slate-700/50 pb-4">
+            <div className={`flex items-center justify-between border-b pb-4 ${
+              isDarkMode ? 'border-slate-800' : 'border-slate-200'
+            }`}>
               <div>
-                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-[#FFC107] text-[#1E1A5B]">
+                <span className="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-md bg-[#FFC107] text-[#1E1A5B]">
                   {selectedNews.category}
                 </span>
-                <span className="text-xs text-slate-400 font-mono ml-2">{selectedNews.date}</span>
+                <span className={`text-xs font-mono ml-2 font-bold ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>{selectedNews.date}</span>
               </div>
               <button
                 onClick={() => setSelectedNews(null)}
-                className="w-8 h-8 rounded-full bg-slate-800 text-slate-300 flex items-center justify-center font-bold"
+                className={`w-9 h-9 rounded-full flex items-center justify-center font-bold transition-all ${
+                  isDarkMode ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <h3 className="text-xl sm:text-2xl font-black text-[#FFC107]">{selectedNews.title}</h3>
+            <h3 className={`text-xl sm:text-2xl font-black leading-tight ${
+              isDarkMode ? 'text-[#FFC107]' : 'text-[#1E1A5B]'
+            }`}>
+              {selectedNews.title}
+            </h3>
 
             {/* News Media Area */}
-            <div className="space-y-4">
-              {selectedNews.imageUrl && (
-                <img src={selectedNews.imageUrl} alt={selectedNews.title} className="w-full h-60 object-cover rounded-2xl border border-slate-700" />
-              )}
-              {selectedNews.videoUrl && (
-                <div className="rounded-2xl overflow-hidden border border-slate-700 bg-slate-950">
-                  <video src={selectedNews.videoUrl} controls className="w-full max-h-80 mx-auto object-contain" />
-                </div>
-              )}
-            </div>
+            {(selectedNews.imageUrl || selectedNews.videoUrl) && (
+              <div className="space-y-4 my-2">
+                {selectedNews.imageUrl && (
+                  <img
+                    src={selectedNews.imageUrl}
+                    alt={selectedNews.title}
+                    className={`w-full max-h-80 object-cover rounded-2xl border ${
+                      isDarkMode ? 'border-slate-800' : 'border-slate-200'
+                    }`}
+                  />
+                )}
+                {selectedNews.videoUrl && (
+                  <div className={`rounded-2xl overflow-hidden border bg-slate-950 ${
+                    isDarkMode ? 'border-slate-800' : 'border-slate-200'
+                  }`}>
+                    <video src={selectedNews.videoUrl} controls className="w-full max-h-96 mx-auto object-contain" />
+                  </div>
+                )}
+              </div>
+            )}
 
-            <p className="text-sm text-slate-300 leading-relaxed font-medium">
+            <div className={`text-sm leading-relaxed font-medium whitespace-pre-line ${
+              isDarkMode ? 'text-slate-300' : 'text-slate-800'
+            }`}>
               {selectedNews.content}
-            </p>
+            </div>
 
             <div className="pt-4 text-right">
               <button
                 onClick={() => setSelectedNews(null)}
-                className="px-6 py-2.5 bg-slate-800 text-slate-200 text-xs font-bold rounded-xl"
+                className={`px-6 py-2.5 text-xs font-bold rounded-xl transition-all ${
+                  isDarkMode ? 'bg-slate-800 text-slate-200 hover:bg-slate-700' : 'bg-slate-100 text-slate-800 hover:bg-slate-200'
+                }`}
               >
-                Close
+                {currentLang === 'uz' ? 'Yopish' : currentLang === 'ru' ? 'Закрыть' : 'Close'}
               </button>
             </div>
           </div>
