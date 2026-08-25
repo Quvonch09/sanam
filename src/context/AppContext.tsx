@@ -116,6 +116,7 @@ const initialNews: NewsItem[] = [
     category: 'Vakansiya',
     summary: '3 000 000 – 3 500 000 so\'m oylik, bepul tushlik, yotoqxona, bog\'cha va bepul xizmat avtobusi bilan ishga taklif qilamiz.',
     content: 'SANAM Tikuvchilik Fabrikasi tajribali tikuvchilarni ishga taklif etadi! Davlat buyurtmalari asosida erkaklar ko\'ylaklari, maktab formalari, kurtkalar, mudofaa va IIV xodimlari dalaviy formalari va eksport ishchi kiyimlari tikiladi.\n\n💰 Oylik maosh: 3 000 000 – 3 500 000 so\'m (Ishbay 08:00-17:00)\n\n🎁 Bepul sharoitlar:\n- 150 o\'rinli oshxonada bepul tushlik\n- 20 o\'rinli yotoqxona va 20 o\'rinli bog\'cha\n- Qarshi tumanining Xonyon, Ertepa, Mirmiron, Avrora, Kochkak, Kamandi, Boston yo\'nalishida bepul xizmat avtobusi!\n\n📍 Manzil: Qarshi sh., I.Karimov k., 221-uy.\n📞 Tel: +998 88 805 22 28, +998 97 902 18 18, +998 75 221 75 65',
+    imageUrl: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?q=80&w=800&auto=format&fit=crop',
   },
   {
     id: 'news-store-school',
@@ -124,6 +125,7 @@ const initialNews: NewsItem[] = [
     category: 'Savdo do\'koni',
     summary: 'Qarshi shahridagi do\'konimizda erkaklar klassik ko\'ylaklari (40.000 so\'m) va maktab formalari (200.000 so\'m) sotuvda!',
     content: '🏢 Sanam Tikuvchilik Fabrikasi savdo do\'koni Qarshi shahrida sizning xizmatingizda!\n\n👔 Keng assortimentda:\n- Erkaklar uchun klassik oq va rangli ko\'ylaklar (40.000 so\'m)\n- Maktab formalari to\'plami (200.000 so\'m)\n- Korxona, shifoxona, harbiy va qo\'riqlash xizmati uniformalari\n\n✂️ O\'z o\'lchamingizda, istalgan uslubda va sifatli matolardan tikib beriladi!\n📞 Buyurtma uchun: +998 90 313 77 88 / +998 87 805 66 66',
+    imageUrl: 'https://images.unsplash.com/photo-1588072432836-e10032774350?q=80&w=800&auto=format&fit=crop',
   },
   {
     id: 'news-jeans-turkish',
@@ -132,6 +134,7 @@ const initialNews: NewsItem[] = [
     category: 'Yangi to\'plam',
     summary: 'Turkiya stili asosida tikilgan 48-56 razmerdagi zamonaviy va chidamli erkaklar jinsi dvoyka to\'plami sotuvda.',
     content: 'Erkaklar uchun jinsi dvoyka Turkiya stili asosida tikilgan.\nRazmer: 48-56 razmergacha sotuvda bor.\nIkki xil ko\'rkam ranglari mavjud.\nSifatli 100% denim matosi va qulay bichim.\n\n☎️ Buyurtma uchun: +998 87 805 66 66',
+    imageUrl: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?q=80&w=800&auto=format&fit=crop',
   },
   {
     id: 'news-quality-principle',
@@ -140,6 +143,7 @@ const initialNews: NewsItem[] = [
     category: 'Sifat nazorati',
     summary: 'Sanam tikuvchilik fabrikasida har bir mahsulot mijoz qo\'liga yetib borishidan oldin sifat nazoratidan puxta o\'tkaziladi.',
     content: '✅ Sifat — bizning ustuvor tamoyilimiz!\nSanam tikuvchilik fabrikasida har bir mahsulot mijoz qo\'liga yetib borishidan oldin sifat nazoratidan puxta o\'tkaziladi.\n✨ Sifat tasodif emas, u mehnat va mas\'uliyat natijasidir.\n\n📩 Buyurtmalar va hamkorlik uchun biz bilan bog\'laning!',
+    imageUrl: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?q=80&w=800&auto=format&fit=crop',
   },
   {
     id: 'news-special-uniforms',
@@ -148,6 +152,7 @@ const initialNews: NewsItem[] = [
     category: 'Spetsodejda',
     summary: 'Sanoat korxonalari, tibbiyot, harbiy va qo\'riqlash xizmatlari uchun maxsus ish kiyimlari va uniformalar.',
     content: 'Siz sifatli va qulay maxsus ish kiyimlarini izlayapsizmi? Unda Sanam tikuvchilik fabrikasining savdo do\'koniga tashrif buyuring!\n\nBizda:\n- Korxona va tashkilotlar uchun maxsus ish kiyimlari\n- Tibbiyot xodimlari formasi\n- Harbiy va qo\'riqlash xizmati kiyimlari\n- Erkaklar klassik ko\'ylaklari\n\n📍 Manzil: Qarshi shahri, Sanam tikuvchilik fabrikasi savdo do\'koni.',
+    imageUrl: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?q=80&w=800&auto=format&fit=crop',
   },
   {
     id: 'news-1',
@@ -156,6 +161,7 @@ const initialNews: NewsItem[] = [
     category: 'Texnologiya',
     summary: 'Fabrikamiz ishlab chiqarish unumdorligini 40% ga oshiradigan avtomatlashtirilgan yangi dastgohlarni ishga tushirdi.',
     content: 'SANAM OFFICIAL fabrikasi Qashqadaryo viloyatida eng zamonaviy tikuv uskunalarini ornatishda davom etmoqda.',
+    imageUrl: 'https://images.unsplash.com/photo-1581092335397-9583fe92d232?q=80&w=800&auto=format&fit=crop',
   },
 ];
 
@@ -358,7 +364,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
       
-      // Read local cache
       let localList: ProductItem[] = [];
       try {
         const raw = localStorage.getItem('sanam_products_v3') || localStorage.getItem('sanam_products');
@@ -372,14 +377,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
 
       const dbMapped = (data || []).map(mapProduct);
-      const dbIds = new Set(dbMapped.map((p) => p.id));
+      const dbMap = new Map<string, ProductItem>();
+      dbMapped.forEach((p) => dbMap.set(p.id, p));
+
       const candidateMap = new Map<string, ProductItem>();
       [...initialProducts, ...localList].forEach((p) => candidateMap.set(p.id, p));
-      const candidateList = Array.from(candidateMap.values());
-      const missingInDb = candidateList.filter((p) => !dbIds.has(p.id));
 
+      const mergedList: ProductItem[] = [];
+
+      candidateMap.forEach((localItem, id) => {
+        const dbItem = dbMap.get(id);
+        if (dbItem) {
+          mergedList.push({
+            ...localItem,
+            ...dbItem,
+            imageUrl: dbItem.imageUrl || localItem.imageUrl,
+            images: (dbItem.images && dbItem.images.length > 0) ? dbItem.images : (localItem.images ?? (localItem.imageUrl ? [localItem.imageUrl] : [])),
+          });
+          dbMap.delete(id);
+        } else {
+          mergedList.push(localItem);
+        }
+      });
+
+      dbMap.forEach((dbItem) => mergedList.push(dbItem));
+
+      const missingInDb = Array.from(candidateMap.values()).filter((p) => !dbMapped.some((dbP) => dbP.id === p.id));
       if (missingInDb.length > 0) {
-        // Auto-migrate missing items to Supabase
         const rowsToInsert = missingInDb.map((p) => ({
           id: p.id,
           name: p.name,
@@ -396,10 +420,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         await supabase.from('products').upsert(rowsToInsert);
       }
 
-      const finalCombined = [...dbMapped, ...missingInDb];
-      const resultList = finalCombined.length > 0 ? finalCombined : initialProducts;
+      const resultList = mergedList.length > 0 ? mergedList : initialProducts;
       setProducts(resultList);
-      localStorage.setItem('sanam_products_v3', JSON.stringify(resultList));
+      try {
+        localStorage.setItem('sanam_products_v3', JSON.stringify(resultList));
+      } catch (e) {}
     } catch (e) {
       console.error('loadProducts exception:', e);
     }
@@ -446,12 +471,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
 
       const dbMapped = (data || []).map(mapNews);
-      const dbIds = new Set(dbMapped.map((n) => n.id));
+      const dbMap = new Map<string, NewsItem>();
+      dbMapped.forEach((n) => dbMap.set(n.id, n));
+
       const candidateMap = new Map<string, NewsItem>();
       [...initialNews, ...localList].forEach((n) => candidateMap.set(n.id, n));
-      const candidateList = Array.from(candidateMap.values());
-      const missingInDb = candidateList.filter((n) => !dbIds.has(n.id));
 
+      const mergedList: NewsItem[] = [];
+
+      candidateMap.forEach((localItem, id) => {
+        const dbItem = dbMap.get(id);
+        if (dbItem) {
+          mergedList.push({
+            ...localItem,
+            ...dbItem,
+            imageUrl: dbItem.imageUrl || localItem.imageUrl,
+            videoUrl: dbItem.videoUrl || localItem.videoUrl,
+          });
+          dbMap.delete(id);
+        } else {
+          mergedList.push(localItem);
+        }
+      });
+
+      dbMap.forEach((dbItem) => mergedList.push(dbItem));
+
+      const missingInDb = Array.from(candidateMap.values()).filter((n) => !dbMapped.some((dbN) => dbN.id === n.id));
       if (missingInDb.length > 0) {
         const rowsToInsert = missingInDb.map((n) => ({
           id: n.id,
@@ -466,10 +511,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         await supabase.from('news').upsert(rowsToInsert);
       }
 
-      const finalCombined = [...dbMapped, ...missingInDb];
-      const resultList = finalCombined.length > 0 ? finalCombined : initialNews;
+      const resultList = mergedList.length > 0 ? mergedList : initialNews;
       setNewsList(resultList);
-      localStorage.setItem('sanam_news', JSON.stringify(resultList));
+      try {
+        localStorage.setItem('sanam_news', JSON.stringify(resultList));
+      } catch (e) {}
     } catch (e) {
       console.error('loadNews exception:', e);
     }
@@ -491,12 +537,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
 
       const dbMapped = (data || []).map(mapTeam);
-      const dbIds = new Set(dbMapped.map((t) => t.id));
+      const dbMap = new Map<string, TeamMember>();
+      dbMapped.forEach((t) => dbMap.set(t.id, t));
+
       const candidateMap = new Map<string, TeamMember>();
       [...initialTeam, ...localList].forEach((t) => candidateMap.set(t.id, t));
-      const candidateList = Array.from(candidateMap.values());
-      const missingInDb = candidateList.filter((t) => !dbIds.has(t.id));
 
+      const mergedList: TeamMember[] = [];
+
+      candidateMap.forEach((localItem, id) => {
+        const dbItem = dbMap.get(id);
+        if (dbItem) {
+          mergedList.push({
+            ...localItem,
+            ...dbItem,
+            imageUrl: dbItem.imageUrl || localItem.imageUrl,
+          });
+          dbMap.delete(id);
+        } else {
+          mergedList.push(localItem);
+        }
+      });
+
+      dbMap.forEach((dbItem) => mergedList.push(dbItem));
+
+      const missingInDb = Array.from(candidateMap.values()).filter((t) => !dbMapped.some((dbT) => dbT.id === t.id));
       if (missingInDb.length > 0) {
         const rowsToInsert = missingInDb.map((t) => ({
           id: t.id,
@@ -508,10 +573,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         await supabase.from('team_members').upsert(rowsToInsert);
       }
 
-      const finalCombined = [...dbMapped, ...missingInDb];
-      const resultList = finalCombined.length > 0 ? finalCombined : initialTeam;
+      const resultList = mergedList.length > 0 ? mergedList : initialTeam;
       setTeamList(resultList);
-      localStorage.setItem('sanam_team', JSON.stringify(resultList));
+      try {
+        localStorage.setItem('sanam_team', JSON.stringify(resultList));
+      } catch (e) {}
     } catch (e) {
       console.error('loadTeam exception:', e);
     }

@@ -38,6 +38,11 @@ export const initialProducts: ProductItem[] = [
     category: 'fashion',
     desc: 'Korxonalar va rasmiy tadbirlar uchun klassik uslubdagi premium erkaklar kostyum-shim toplami.',
     badge: 'Top Sotuv',
+    imageUrl: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=800&auto=format&fit=crop',
+    images: [
+      'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=800&auto=format&fit=crop',
+    ],
   },
   {
     id: 'prod-2',
@@ -49,6 +54,11 @@ export const initialProducts: ProductItem[] = [
     category: 'uniforms',
     desc: 'Sanoat sexi va qurilish obektlari uchun mustahkam, yirtilishga chidamli va chontakli ishchi formasi.',
     badge: 'Mustahkam',
+    imageUrl: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?q=80&w=800&auto=format&fit=crop',
+    images: [
+      'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1581092160607-ee22621dd758?q=80&w=800&auto=format&fit=crop',
+    ],
   },
   {
     id: 'prod-3',
@@ -60,6 +70,11 @@ export const initialProducts: ProductItem[] = [
     category: 'fashion',
     desc: 'Nafas oluvchi toza paxtadan tikilgan, ajin bosmaydigan qulay kundalik koylak.',
     badge: '100% Paxta',
+    imageUrl: 'https://images.unsplash.com/photo-1620012253295-c15cc3e65df4?q=80&w=800&auto=format&fit=crop',
+    images: [
+      'https://images.unsplash.com/photo-1620012253295-c15cc3e65df4?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?q=80&w=800&auto=format&fit=crop',
+    ],
   },
   {
     id: 'prod-4',
@@ -71,6 +86,10 @@ export const initialProducts: ProductItem[] = [
     category: 'uniforms',
     desc: 'Kompaniya xodimalari uchun zamonaviy bichimdagi kostyum-yubka va nimchalar.',
     badge: 'Korporativ',
+    imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=800&auto=format&fit=crop',
+    images: [
+      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=800&auto=format&fit=crop',
+    ],
   },
   {
     id: 'prod-5',
@@ -82,6 +101,10 @@ export const initialProducts: ProductItem[] = [
     category: 'school-uniforms',
     desc: 'Sport togaraklari va maktablar uchun yumshoq, harakatlanishga qulay sport toplami.',
     badge: 'Sport',
+    imageUrl: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop',
+    images: [
+      'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop',
+    ],
   },
   {
     id: 'prod-6',
@@ -93,6 +116,10 @@ export const initialProducts: ProductItem[] = [
     category: 'bedding',
     desc: 'Mehmonxonalar va sanatoriylar uchun uzoq yillik yuvishga chidamli toza paxta choyshablari.',
     badge: 'Toqimachilik',
+    imageUrl: 'https://images.unsplash.com/photo-1616046229478-9901c5536a45?q=80&w=800&auto=format&fit=crop',
+    images: [
+      'https://images.unsplash.com/photo-1616046229478-9901c5536a45?q=80&w=800&auto=format&fit=crop',
+    ],
   },
   {
     id: 'prod-7',
@@ -104,6 +131,10 @@ export const initialProducts: ProductItem[] = [
     category: 'med-uniforms',
     desc: 'Shifokorlar va hamshiralar uchun antiseptik ishlov berilgan, qulay va yengil tibbiyot xalati.',
     badge: 'Tibbiyot',
+    imageUrl: 'https://images.unsplash.com/photo-1584982751601-97dcc096659c?q=80&w=800&auto=format&fit=crop',
+    images: [
+      'https://images.unsplash.com/photo-1584982751601-97dcc096659c?q=80&w=800&auto=format&fit=crop',
+    ],
   },
   {
     id: 'prod-8',
@@ -115,6 +146,10 @@ export const initialProducts: ProductItem[] = [
     category: 'school-uniforms',
     desc: 'Maktab oquvchilari uchun davlat standarti boyicha tikilgan chidamli va korkam forma toplami.',
     badge: 'Maktab',
+    imageUrl: 'https://images.unsplash.com/photo-1588072432836-e10032774350?q=80&w=800&auto=format&fit=crop',
+    images: [
+      'https://images.unsplash.com/photo-1588072432836-e10032774350?q=80&w=800&auto=format&fit=crop',
+    ],
   },
   {
     id: 'prod-9',
@@ -126,6 +161,10 @@ export const initialProducts: ProductItem[] = [
     category: 'uniforms',
     desc: 'Mexanik va sanoat texniklari uchun koplab narsalar sigadigan chontakli kombinezon.',
     badge: 'Maxsus',
+    imageUrl: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?q=80&w=800&auto=format&fit=crop',
+    images: [
+      'https://images.unsplash.com/photo-1581092160607-ee22621dd758?q=80&w=800&auto=format&fit=crop',
+    ],
   },
   {
     id: 'prod-10',
@@ -137,6 +176,10 @@ export const initialProducts: ProductItem[] = [
     category: 'uniforms',
     desc: 'Sovuq havodagi obektlar va ochiq maydonlar uchun shamol va suv otkazmaydigan issiq kurtka.',
     badge: 'Qishki',
+    imageUrl: 'https://images.unsplash.com/photo-1544441893-675973e31985?q=80&w=800&auto=format&fit=crop',
+    images: [
+      'https://images.unsplash.com/photo-1544441893-675973e31985?q=80&w=800&auto=format&fit=crop',
+    ],
   },
   {
     id: 'prod-11',
@@ -148,6 +191,10 @@ export const initialProducts: ProductItem[] = [
     category: 'fashion',
     desc: 'Yozgi issiq kunlarda kiyishga moljallangan yengil va nafas oluvchi dizaynerlik kostyumi.',
     badge: 'Yozgi',
+    imageUrl: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=800&auto=format&fit=crop',
+    images: [
+      'https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=800&auto=format&fit=crop',
+    ],
   },
   {
     id: 'prod-12',
@@ -159,6 +206,10 @@ export const initialProducts: ProductItem[] = [
     category: 'fashion',
     desc: 'Uzoq muddat xizmat qiluvchi mustahkam jinsi kurtka va shim dvoyka toplami.',
     badge: 'Jinsi',
+    imageUrl: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?q=80&w=800&auto=format&fit=crop',
+    images: [
+      'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?q=80&w=800&auto=format&fit=crop',
+    ],
   },
   {
     id: 'prod-13',
@@ -170,6 +221,10 @@ export const initialProducts: ProductItem[] = [
     category: 'fashion',
     desc: 'Kompaniya logotipi tushirish uchun mos bolgan yumshoq va chidamli paxta futbolkasi.',
     badge: 'Promokiyim',
+    imageUrl: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=800&auto=format&fit=crop',
+    images: [
+      'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=800&auto=format&fit=crop',
+    ],
   },
   {
     id: 'prod-14',
@@ -181,6 +236,10 @@ export const initialProducts: ProductItem[] = [
     category: 'uniforms',
     desc: 'Harbiy va maxsus qoriqlash xizmati xodimlari uchun yozgi pishiq kamuflyaj kostyumi.',
     badge: 'Harbiy',
+    imageUrl: 'https://images.unsplash.com/photo-1598197748967-b4674cb3c266?q=80&w=800&auto=format&fit=crop',
+    images: [
+      'https://images.unsplash.com/photo-1598197748967-b4674cb3c266?q=80&w=800&auto=format&fit=crop',
+    ],
   },
   {
     id: 'prod-15',
@@ -192,6 +251,10 @@ export const initialProducts: ProductItem[] = [
     category: 'uniforms',
     desc: 'Ishchilar va promoshoular uchun logotip tushiriladigan pishiq va qulay kepka.',
     badge: 'Aksesuar',
+    imageUrl: 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?q=80&w=800&auto=format&fit=crop',
+    images: [
+      'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?q=80&w=800&auto=format&fit=crop',
+    ],
   },
   {
     id: 'prod-16',
@@ -203,6 +266,10 @@ export const initialProducts: ProductItem[] = [
     category: 'fashion',
     desc: 'Uy, korxona hamda sex xodimalari uchun qulay va yumshoq ayollar xalati.',
     badge: 'Ayollar',
+    imageUrl: 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?q=80&w=800&auto=format&fit=crop',
+    images: [
+      'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?q=80&w=800&auto=format&fit=crop',
+    ],
   },
   {
     id: 'prod-17',
@@ -214,6 +281,10 @@ export const initialProducts: ProductItem[] = [
     category: 'fashion',
     desc: 'Har kunlik ish hamda rasmiy tadbirlar uchun tekis bichimdagi chidamli shim.',
     badge: 'Shimlar',
+    imageUrl: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?q=80&w=800&auto=format&fit=crop',
+    images: [
+      'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?q=80&w=800&auto=format&fit=crop',
+    ],
   },
   {
     id: 'prod-18',
@@ -225,6 +296,10 @@ export const initialProducts: ProductItem[] = [
     category: 'uniforms',
     desc: 'Qurilish va ogir sanoat uchun oyogni zarbalardan himoya qiluvchi metall burnli etik.',
     badge: 'Himoya',
+    imageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=800&auto=format&fit=crop',
+    images: [
+      'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=800&auto=format&fit=crop',
+    ],
   },
   {
     id: 'prod-19',
@@ -236,6 +311,10 @@ export const initialProducts: ProductItem[] = [
     category: 'bedding',
     desc: 'Mehmonxonalar, sanatoriy va SPA markazlari uchun yumshoq va toza bir martalik tapochka.',
     badge: 'Mehmonxona',
+    imageUrl: 'https://images.unsplash.com/photo-1560769629-975ec94e6a86?q=80&w=800&auto=format&fit=crop',
+    images: [
+      'https://images.unsplash.com/photo-1560769629-975ec94e6a86?q=80&w=800&auto=format&fit=crop',
+    ],
   },
   {
     id: 'prod-20',
@@ -247,6 +326,10 @@ export const initialProducts: ProductItem[] = [
     category: 'uniforms',
     desc: 'Tungi paytlarda va obektlarda korinuvchanlikni taminlovchi nur qaytaruvchi tasma jilet.',
     badge: 'Signal',
+    imageUrl: 'https://images.unsplash.com/photo-1618042164219-62c820f10723?q=80&w=800&auto=format&fit=crop',
+    images: [
+      'https://images.unsplash.com/photo-1618042164219-62c820f10723?q=80&w=800&auto=format&fit=crop',
+    ],
   },
   {
     id: 'prod-21',
@@ -258,6 +341,10 @@ export const initialProducts: ProductItem[] = [
     category: 'med-uniforms',
     desc: 'Restoran va oshxonalar uchun dog yuqmaydigan pishiq oshpaz kiyimi va fartuk toplami.',
     badge: 'Oshpaz',
+    imageUrl: 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?q=80&w=800&auto=format&fit=crop',
+    images: [
+      'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?q=80&w=800&auto=format&fit=crop',
+    ],
   },
   {
     id: 'prod-22',
@@ -269,5 +356,9 @@ export const initialProducts: ProductItem[] = [
     category: 'med-uniforms',
     desc: 'Sexlar va tibbiyot muassasalari uchun nafas olishni qulaylashtiruvchi kop martalik niqob.',
     badge: 'Himoya',
+    imageUrl: 'https://images.unsplash.com/photo-1584634731339-252c581abfc5?q=80&w=800&auto=format&fit=crop',
+    images: [
+      'https://images.unsplash.com/photo-1584634731339-252c581abfc5?q=80&w=800&auto=format&fit=crop',
+    ],
   },
 ];
