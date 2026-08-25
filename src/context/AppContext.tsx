@@ -402,24 +402,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       dbMap.forEach((dbItem) => mergedList.push(dbItem));
 
-      const missingInDb = Array.from(candidateMap.values()).filter((p) => !dbMapped.some((dbP) => dbP.id === p.id));
-      if (missingInDb.length > 0) {
-        const rowsToInsert = missingInDb.map((p) => ({
-          id: p.id,
-          name: p.name,
-          category: p.category,
-          description: p.desc,
-          image_url: p.imageUrl,
-          images: p.images ?? [],
-          model: p.model,
-          sizes: p.sizes,
-          material: p.material,
-          price: p.price,
-          badge: p.badge ?? '',
-        }));
-        await supabase.from('products').upsert(rowsToInsert);
-      }
-
       const resultList = mergedList.length > 0 ? mergedList : initialProducts;
       setProducts(resultList);
       try {
@@ -432,24 +414,54 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const loadCategories = async () => {
     try {
-      setCategories(initialCategories);
-      localStorage.setItem('sanam_categories', JSON.stringify(initialCategories));
+      const { data, error } = await supabase.from('categories').select('*');
+      
+      let localList: CategoryItem[] = [];
+      try {
+        const raw = localStorage.getItem('sanam_categories');
+        if (raw) localList = JSON.parse(raw);
+      } catch (e) {}
 
-      const rowsToInsert = initialCategories.map((c) => ({
-        id: c.id,
-        key: c.key,
-        label: c.label,
-      }));
-      await supabase.from('categories').upsert(rowsToInsert);
-
-      const validIds = new Set(initialCategories.map((c) => c.id));
-      const { data } = await supabase.from('categories').select('id');
-      if (data) {
-        const legacyIds = data.filter((row) => !validIds.has(row.id)).map((row) => row.id);
-        if (legacyIds.length > 0) {
-          await supabase.from('categories').delete().in('id', legacyIds);
-        }
+      if (error) {
+        console.error('categories load error:', error);
+        if (localList.length > 0) setCategories(localList);
+        return;
       }
+
+      const dbMapped = (data || []).map((row: any) => ({
+        id: row.id,
+        key: row.key ?? '',
+        label: row.label ?? '',
+      }));
+
+      const dbMap = new Map<string, CategoryItem>();
+      dbMapped.forEach((c) => dbMap.set(c.id, c));
+
+      const candidateMap = new Map<string, CategoryItem>();
+      [...initialCategories, ...localList].forEach((c) => candidateMap.set(c.id, c));
+
+      const mergedList: CategoryItem[] = [];
+
+      candidateMap.forEach((localItem, id) => {
+        const dbItem = dbMap.get(id);
+        if (dbItem) {
+          mergedList.push({
+            ...localItem,
+            ...dbItem,
+          });
+          dbMap.delete(id);
+        } else {
+          mergedList.push(localItem);
+        }
+      });
+
+      dbMap.forEach((dbItem) => mergedList.push(dbItem));
+
+      const resultList = mergedList.length > 0 ? mergedList : initialCategories;
+      setCategories(resultList);
+      try {
+        localStorage.setItem('sanam_categories', JSON.stringify(resultList));
+      } catch (e) {}
     } catch (e) {
       console.error('loadCategories exception:', e);
     }
@@ -466,6 +478,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } catch (e) {}
 
       if (error) {
+        console.error('news load error:', error);
         if (localList.length > 0) setNewsList(localList);
         return;
       }
@@ -496,21 +509,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       dbMap.forEach((dbItem) => mergedList.push(dbItem));
 
-      const missingInDb = Array.from(candidateMap.values()).filter((n) => !dbMapped.some((dbN) => dbN.id === n.id));
-      if (missingInDb.length > 0) {
-        const rowsToInsert = missingInDb.map((n) => ({
-          id: n.id,
-          title: n.title,
-          date: n.date,
-          category: n.category,
-          summary: n.summary,
-          content: n.content,
-          image_url: n.imageUrl ?? null,
-          video_url: n.videoUrl ?? null,
-        }));
-        await supabase.from('news').upsert(rowsToInsert);
-      }
-
       const resultList = mergedList.length > 0 ? mergedList : initialNews;
       setNewsList(resultList);
       try {
@@ -532,6 +530,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } catch (e) {}
 
       if (error) {
+        console.error('team load error:', error);
         if (localList.length > 0) setTeamList(localList);
         return;
       }
@@ -561,18 +560,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       dbMap.forEach((dbItem) => mergedList.push(dbItem));
 
-      const missingInDb = Array.from(candidateMap.values()).filter((t) => !dbMapped.some((dbT) => dbT.id === t.id));
-      if (missingInDb.length > 0) {
-        const rowsToInsert = missingInDb.map((t) => ({
-          id: t.id,
-          name: t.name,
-          role: t.role,
-          image_url: t.imageUrl ?? null,
-          phone: t.phone ?? null,
-        }));
-        await supabase.from('team_members').upsert(rowsToInsert);
-      }
-
       const resultList = mergedList.length > 0 ? mergedList : initialTeam;
       setTeamList(resultList);
       try {
@@ -594,6 +581,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } catch (e) {}
 
       if (error) {
+        console.error('feedbacks load error:', error);
         if (localList.length > 0) setFeedbacks(localList);
         return;
       }
@@ -603,22 +591,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const candidateList = localList.length > 0 ? localList : initialFeedbacks;
       const missingInDb = candidateList.filter((f) => !dbIds.has(f.id));
 
-      if (missingInDb.length > 0) {
-        const rowsToInsert = missingInDb.map((f) => ({
-          id: f.id,
-          name: f.name,
-          rating: f.rating,
-          text: f.text,
-          date: f.date,
-          approved: f.approved,
-        }));
-        await supabase.from('feedbacks').upsert(rowsToInsert);
-      }
-
       const finalCombined = [...dbMapped, ...missingInDb];
       const resultList = finalCombined.length > 0 ? finalCombined : initialFeedbacks;
       setFeedbacks(resultList);
-      localStorage.setItem('sanam_feedbacks', JSON.stringify(resultList));
+      try {
+        localStorage.setItem('sanam_feedbacks', JSON.stringify(resultList));
+      } catch (e) {}
     } catch (e) {
       console.error('loadFeedbacks exception:', e);
     }
@@ -635,6 +613,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } catch (e) {}
 
       if (error) {
+        console.error('leads load error:', error);
         if (localList.length > 0) setLeads(localList);
         return;
       }
@@ -643,23 +622,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const dbIds = new Set(dbMapped.map((l) => l.id));
       const missingInDb = localList.filter((l) => !dbIds.has(l.id));
 
-      if (missingInDb.length > 0) {
-        const rowsToInsert = missingInDb.map((l) => ({
-          id: l.id,
-          name: l.name,
-          phone: l.phone,
-          service: l.service,
-          message: l.message,
-          date: l.date,
-          status: l.status,
-        }));
-        await supabase.from('leads').upsert(rowsToInsert);
-      }
-
       const finalCombined = [...dbMapped, ...missingInDb];
       setLeads(finalCombined);
       setLeadsCount(finalCombined.length);
-      localStorage.setItem('sanam_leads', JSON.stringify(finalCombined));
+      try {
+        localStorage.setItem('sanam_leads', JSON.stringify(finalCombined));
+      } catch (e) {}
     } catch (e) {
       console.error('loadLeads exception:', e);
     }
@@ -676,6 +644,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } catch (e) {}
 
       if (error) {
+        console.error('calc_inquiries load error:', error);
         if (localList.length > 0) setCalcInquiries(localList);
         return;
       }
@@ -684,27 +653,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const dbIds = new Set(dbMapped.map((c) => c.id));
       const missingInDb = localList.filter((c) => !dbIds.has(c.id));
 
-      if (missingInDb.length > 0) {
-        const rowsToInsert = missingInDb.map((c) => ({
-          id: c.id,
-          product_type: c.productType,
-          quantity: c.quantity,
-          estimated_days: c.estimatedDays,
-          phone: c.phone,
-          date: c.date,
-          status: c.status,
-        }));
-        await supabase.from('calc_inquiries').upsert(rowsToInsert);
-      }
-
       const finalCombined = [...dbMapped, ...missingInDb];
       setCalcInquiries(finalCombined);
       setCalcCount(finalCombined.length);
-      localStorage.setItem('sanam_calc_inquiries', JSON.stringify(finalCombined));
+      try {
+        localStorage.setItem('sanam_calc_inquiries', JSON.stringify(finalCombined));
+      } catch (e) {}
     } catch (e) {
       console.error('loadCalcInquiries exception:', e);
     }
   };
+
 
   // Explicit full sync method for Admin Panel button
   const syncLocalStorageToSupabase = async (): Promise<{ success: boolean; message: string }> => {

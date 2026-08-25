@@ -6,6 +6,8 @@ import { AppProvider, useApp, ProductItem, NewsItem, TeamMember, CategoryItem } 
 import { SanamLogo } from '@/components/SanamLogo';
 import { Language, translations } from '@/data/translations';
 import { slugify } from '@/utils/slugify';
+import { uploadFileToSupabase } from '@/lib/supabase';
+
 
 import {
   Globe,
@@ -87,6 +89,10 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(null);
+
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
 
   // Custom Delete Confirmation Modal State
   const [deleteConfirm, setDeleteConfirm] = useState<{
@@ -206,6 +212,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
     setProdDesc(p.desc);
     setProdBadge(p.badge || 'Yangi');
     setProdImages(p.images || (p.imageUrl ? [p.imageUrl] : []));
+    setUploadError(null);
     setShowProductModal(true);
   };
 
@@ -215,6 +222,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
     setTeamName(t.name);
     setTeamRole(t.role);
     setTeamImageBase64(t.imageUrl || '');
+    setUploadError(null);
     setShowTeamModal(true);
   };
 
@@ -227,6 +235,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
     setNewsContent(n.content);
     setNewsImageBase64(n.imageUrl || '');
     setNewsVideoBase64(n.videoUrl || '');
+    setUploadError(null);
     setShowNewsModal(true);
   };
 
@@ -785,6 +794,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   setProdPrice('');
                   setProdDesc('');
                   setProdImages([]);
+                  setUploadError(null);
                   setShowProductModal(true);
                 }}
                 className="px-5 py-3 bg-[#FFC107] hover:bg-amber-400 text-[#1E1A5B] text-xs font-extrabold rounded-2xl shadow-lg transition-all flex items-center gap-2"
@@ -926,6 +936,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   setTeamName('');
                   setTeamRole('Директор');
                   setTeamImageBase64('');
+                  setUploadError(null);
                   setShowTeamModal(true);
                 }}
                 className="px-5 py-3 bg-[#FFC107] hover:bg-amber-400 text-[#1E1A5B] text-xs font-extrabold rounded-2xl shadow-lg flex items-center gap-2"
@@ -984,6 +995,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   setNewsContent('');
                   setNewsImageBase64('');
                   setNewsVideoBase64('');
+                  setUploadError(null);
                   setShowNewsModal(true);
                 }}
                 className="px-5 py-3 bg-[#FFC107] hover:bg-amber-400 text-[#1E1A5B] text-xs font-extrabold rounded-2xl shadow-lg flex items-center gap-2"
@@ -1368,26 +1380,75 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 <label className="block text-xs font-bold uppercase mb-1">
                   {currentLang === 'uz' ? 'Yangi rasm(lar) qo\'shish' : currentLang === 'ru' ? 'Добавить новое изображение(я)' : 'Add New Image(s)'}
                 </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={(e) => {
-                    const files = Array.from(e.target.files || []);
-                    files.forEach(file => {
-                      const reader = new FileReader();
-                      reader.onloadend = () => {
-                        setProdImages(prev => [...prev, reader.result as string]);
-                      };
-                      reader.readAsDataURL(file);
-                    });
-                  }}
-                  className="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-extrabold file:bg-[#FFC107] file:text-[#1E1A5B] cursor-pointer"
-                />
+                <div className="flex items-center gap-3">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    disabled={isUploading}
+                    onChange={async (e) => {
+                      const files = Array.from(e.target.files || []);
+                      if (files.length === 0) return;
+                      setIsUploading(true);
+                      setUploadError(null);
+                      const uploadedUrls: string[] = [];
+                      
+                      for (const file of files) {
+                        try {
+                          const url = await uploadFileToSupabase(file, 'products');
+                          uploadedUrls.push(url);
+                        } catch (err: any) {
+                          console.error('Product image upload error:', err);
+                          if (file.size < 500 * 1024) {
+                            try {
+                              const base64 = await new Promise<string>((resolve, reject) => {
+                                const reader = new FileReader();
+                                reader.onload = () => resolve(reader.result as string);
+                                reader.onerror = reject;
+                                reader.readAsDataURL(file);
+                              });
+                              uploadedUrls.push(base64);
+                              setUploadError(
+                                currentLang === 'uz'
+                                  ? "Supabase Storage bucket ('sanam') topilmadi. Rasm vaqtincha Base64 formatida saqlandi."
+                                  : "Storage bucket 'sanam' not found. Image saved as Base64."
+                              );
+                            } catch (readErr) {
+                              setUploadError(err.message || 'Upload failed');
+                            }
+                          } else {
+                            setUploadError(
+                              currentLang === 'uz'
+                                ? `Fayl yuklashda xatolik: ${err.message || 'Noma\'lum xato'}. Videolar va katta rasmlar uchun Supabase Storage bucket ('sanam') sozlanishi shart.`
+                                : `Upload error: ${err.message || 'Unknown error'}. Supabase Storage bucket ('sanam') must be configured for videos and large images.`
+                            );
+                          }
+                        }
+                      }
+                      if (uploadedUrls.length > 0) {
+                        setProdImages(prev => [...prev, ...uploadedUrls]);
+                      }
+                      setIsUploading(false);
+                    }}
+                    className="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-extrabold file:bg-[#FFC107] file:text-[#1E1A5B] cursor-pointer"
+                  />
+                  {isUploading && (
+                    <span className="text-[10px] text-[#FFC107] font-bold animate-pulse whitespace-nowrap">
+                      {currentLang === 'uz' ? 'Yuklanmoqda...' : currentLang === 'ru' ? 'Загрузка...' : 'Uploading...'}
+                    </span>
+                  )}
+                </div>
               </div>
 
+              {uploadError && (
+                <div className="p-3 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 text-[10px] font-semibold flex items-center justify-between">
+                  <span>⚠️ {uploadError}</span>
+                  <button type="button" onClick={() => setUploadError(null)} className="text-slate-400 hover:text-white ml-2 text-xs">✕</button>
+                </div>
+              )}
+
               <div className="pt-2 flex gap-3">
-                <button type="submit" className="flex-1 py-3 bg-[#FFC107] text-[#1E1A5B] font-extrabold text-xs rounded-xl shadow">{tAdmin.actions.save}</button>
+                <button type="submit" disabled={isUploading} className={`flex-1 py-3 bg-[#FFC107] text-[#1E1A5B] font-extrabold text-xs rounded-xl shadow ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}>{tAdmin.actions.save}</button>
                 <button type="button" onClick={() => setShowProductModal(false)} className="px-5 py-3 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl">{tAdmin.actions.close}</button>
               </div>
             </form>
@@ -1454,11 +1515,68 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
               <div>
                 <label className="block text-xs font-bold uppercase mb-1">{tAdmin.form.photo}</label>
-                <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, setTeamImageBase64)} className="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-extrabold file:bg-[#FFC107] file:text-[#1E1A5B] cursor-pointer" />
+                <div className="flex items-center gap-3">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    disabled={isUploading}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setIsUploading(true);
+                      setUploadError(null);
+                      try {
+                        const url = await uploadFileToSupabase(file, 'team');
+                        setTeamImageBase64(url);
+                      } catch (err: any) {
+                        console.error('Team photo upload error:', err);
+                        if (file.size < 500 * 1024) {
+                          try {
+                            const base64 = await new Promise<string>((resolve, reject) => {
+                              const reader = new FileReader();
+                              reader.onload = () => resolve(reader.result as string);
+                              reader.onerror = reject;
+                              reader.readAsDataURL(file);
+                            });
+                            setTeamImageBase64(base64);
+                            setUploadError(
+                              currentLang === 'uz'
+                                ? "Supabase Storage bucket ('sanam') topilmadi. Rasm vaqtincha Base64 formatida saqlandi."
+                                : "Storage bucket 'sanam' not found. Image saved as Base64."
+                            );
+                          } catch (readErr) {
+                            setUploadError(err.message || 'Upload failed');
+                          }
+                        } else {
+                          setUploadError(
+                            currentLang === 'uz'
+                              ? `Fayl yuklashda xatolik: ${err.message || 'Noma\'lum xato'}. Videolar va katta rasmlar uchun Supabase Storage bucket ('sanam') sozlanishi shart.`
+                              : `Upload error: ${err.message || 'Unknown error'}. Supabase Storage bucket ('sanam') must be configured for videos and large images.`
+                          );
+                        }
+                      } finally {
+                        setIsUploading(false);
+                      }
+                    }}
+                    className="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-extrabold file:bg-[#FFC107] file:text-[#1E1A5B] cursor-pointer"
+                  />
+                  {isUploading && (
+                    <span className="text-[10px] text-[#FFC107] font-bold animate-pulse whitespace-nowrap">
+                      {currentLang === 'uz' ? 'Yuklanmoqda...' : currentLang === 'ru' ? 'Загрузка...' : 'Uploading...'}
+                    </span>
+                  )}
+                </div>
               </div>
 
+              {uploadError && (
+                <div className="p-3 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 text-[10px] font-semibold flex items-center justify-between">
+                  <span>⚠️ {uploadError}</span>
+                  <button type="button" onClick={() => setUploadError(null)} className="text-slate-400 hover:text-white ml-2 text-xs">✕</button>
+                </div>
+              )}
+
               <div className="pt-2 flex gap-3">
-                <button type="submit" className="flex-1 py-3 bg-[#FFC107] text-[#1E1A5B] font-extrabold text-xs rounded-xl shadow">{tAdmin.actions.save}</button>
+                <button type="submit" disabled={isUploading} className={`flex-1 py-3 bg-[#FFC107] text-[#1E1A5B] font-extrabold text-xs rounded-xl shadow ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}>{tAdmin.actions.save}</button>
                 <button type="button" onClick={() => setShowTeamModal(false)} className="px-5 py-3 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl">{tAdmin.actions.close}</button>
               </div>
             </form>
@@ -1518,12 +1636,57 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       {currentLang === 'uz' ? 'Rasm yuklanmagan' : currentLang === 'ru' ? 'Фото не загружено' : 'No image'}
                     </div>
                   )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleFileUpload(e, setNewsImageBase64)}
-                    className="w-full text-[9px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[9px] file:font-extrabold file:bg-[#FFC107] file:text-[#1E1A5B] cursor-pointer"
-                  />
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      disabled={isUploading}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setIsUploading(true);
+                        setUploadError(null);
+                        try {
+                          const url = await uploadFileToSupabase(file, 'news');
+                          setNewsImageBase64(url);
+                        } catch (err: any) {
+                          console.error('News image upload error:', err);
+                          if (file.size < 500 * 1024) {
+                            try {
+                              const base64 = await new Promise<string>((resolve, reject) => {
+                                const reader = new FileReader();
+                                reader.onload = () => resolve(reader.result as string);
+                                reader.onerror = reject;
+                                reader.readAsDataURL(file);
+                              });
+                              setNewsImageBase64(base64);
+                              setUploadError(
+                                currentLang === 'uz'
+                                  ? "Supabase Storage bucket ('sanam') topilmadi. Rasm vaqtincha Base64 formatida saqlandi."
+                                  : "Storage bucket 'sanam' not found. Image saved as Base64."
+                              );
+                            } catch (readErr) {
+                              setUploadError(err.message || 'Upload failed');
+                            }
+                          } else {
+                            setUploadError(
+                              currentLang === 'uz'
+                                ? `Fayl yuklashda xatolik: ${err.message || 'Noma\'lum xato'}. Videolar va katta rasmlar uchun Supabase Storage bucket ('sanam') sozlanishi shart.`
+                                : `Upload error: ${err.message || 'Unknown error'}. Supabase Storage bucket ('sanam') must be configured for videos and large images.`
+                            );
+                          }
+                        } finally {
+                          setIsUploading(false);
+                        }
+                      }}
+                      className="w-full text-[9px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[9px] file:font-extrabold file:bg-[#FFC107] file:text-[#1E1A5B] cursor-pointer"
+                    />
+                    {isUploading && (
+                      <span className="text-[8px] text-[#FFC107] font-bold animate-pulse whitespace-nowrap">
+                        ...
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Video Preview */}
@@ -1547,17 +1710,50 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       {currentLang === 'uz' ? 'Video yuklanmagan' : currentLang === 'ru' ? 'Видео не загружено' : 'No video'}
                     </div>
                   )}
-                  <input
-                    type="file"
-                    accept="video/*"
-                    onChange={(e) => handleFileUpload(e, setNewsVideoBase64)}
-                    className="w-full text-[9px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[9px] file:font-extrabold file:bg-[#FFC107] file:text-[#1E1A5B] cursor-pointer"
-                  />
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="file"
+                      accept="video/*"
+                      disabled={isUploading}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setIsUploading(true);
+                        setUploadError(null);
+                        try {
+                          const url = await uploadFileToSupabase(file, 'news');
+                          setNewsVideoBase64(url);
+                        } catch (err: any) {
+                          console.error('News video upload error:', err);
+                          setUploadError(
+                            currentLang === 'uz'
+                              ? `Video yuklashda xatolik: ${err.message || 'Noma\'lum xato'}. Videolar uchun Supabase Storage bucket ('sanam') sozlanishi shart.`
+                              : `Video upload error: ${err.message || 'Unknown error'}. Supabase Storage bucket ('sanam') must be configured for videos.`
+                          );
+                        } finally {
+                          setIsUploading(false);
+                        }
+                      }}
+                      className="w-full text-[9px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[9px] file:font-extrabold file:bg-[#FFC107] file:text-[#1E1A5B] cursor-pointer"
+                    />
+                    {isUploading && (
+                      <span className="text-[8px] text-[#FFC107] font-bold animate-pulse whitespace-nowrap">
+                        ...
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 
+              {uploadError && (
+                <div className="p-3 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 text-[10px] font-semibold flex items-center justify-between">
+                  <span>⚠️ {uploadError}</span>
+                  <button type="button" onClick={() => setUploadError(null)} className="text-slate-400 hover:text-white ml-2 text-xs">✕</button>
+                </div>
+              )}
+
               <div className="pt-2 flex gap-3">
-                <button type="submit" className="flex-1 py-3 bg-[#FFC107] text-[#1E1A5B] font-extrabold text-xs rounded-xl shadow">{tAdmin.actions.save}</button>
+                <button type="submit" disabled={isUploading} className={`flex-1 py-3 bg-[#FFC107] text-[#1E1A5B] font-extrabold text-xs rounded-xl shadow ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}>{tAdmin.actions.save}</button>
                 <button type="button" onClick={() => setShowNewsModal(false)} className="px-5 py-3 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl">{tAdmin.actions.close}</button>
               </div>
             </form>
