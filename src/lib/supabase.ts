@@ -12,11 +12,15 @@ export const uploadFileToSupabase = async (file: File, folder: string): Promise<
   const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
   const filePath = `${folder}/${fileName}`;
 
-  // Try to create the bucket if it doesn't exist (fails silently if we lack permissions, which is normal for Anon key)
-  try {
-    await supabase.storage.createBucket(bucketName, { public: true });
-  } catch (e) {
-    // Ignore error
+  // Check if the bucket exists first using listBuckets (this does not trigger RLS errors)
+  const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+  if (listError) {
+    throw listError;
+  }
+
+  const bucketExists = buckets && buckets.some((b) => b.name === bucketName);
+  if (!bucketExists) {
+    throw new Error(`Bucket '${bucketName}' not found. Please create a public bucket named '${bucketName}' in your Supabase Storage dashboard.`);
   }
 
   const { data, error } = await supabase.storage
