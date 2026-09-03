@@ -10,12 +10,22 @@ interface ContactAndMapProps {
 }
 
 export const ContactAndMap: React.FC<ContactAndMapProps> = ({ currentLang }) => {
-  const { addLead, isDarkMode } = useApp();
+  const { addLead, isDarkMode, serviceTypes } = useApp();
   const t = translations[currentLang].contact;
+
+  const getServiceName = (srv: { name: string; nameRu?: string; nameEn?: string }) => {
+    if (currentLang === 'ru' && srv.nameRu) return srv.nameRu;
+    if (currentLang === 'en' && srv.nameEn) return srv.nameEn;
+    return srv.name;
+  };
+
+  const currentServiceOptions = serviceTypes && serviceTypes.length > 0
+    ? serviceTypes.map(getServiceName)
+    : t.form.serviceOptions;
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('+998 ');
-  const [service, setService] = useState(t.form.serviceOptions[0]);
+  const [service, setService] = useState(currentServiceOptions[0] || 'Ulgurji kiyim tikish');
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
@@ -26,7 +36,7 @@ export const ContactAndMap: React.FC<ContactAndMapProps> = ({ currentLang }) => 
     addLead({
       name,
       phone,
-      service,
+      service: service || currentServiceOptions[0] || 'Ulgurji kiyim tikish',
       message,
     });
 
@@ -121,7 +131,7 @@ export const ContactAndMap: React.FC<ContactAndMapProps> = ({ currentLang }) => 
                       isDarkMode ? 'bg-slate-900 border-slate-800 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'
                     }`}
                   >
-                    {t.form.serviceOptions.map((opt, i) => (
+                    {currentServiceOptions.map((opt, i) => (
                       <option key={i} value={opt}>{opt}</option>
                     ))}
                   </select>

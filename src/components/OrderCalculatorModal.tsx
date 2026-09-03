@@ -16,15 +16,26 @@ export const OrderCalculatorModal: React.FC<OrderCalculatorModalProps> = ({
   onClose,
   currentLang,
 }) => {
-  const { addCalcInquiry } = useApp();
-  const [productType, setProductType] = useState('Korporativ Uniforma');
+  const { addCalcInquiry, serviceTypes } = useApp();
+
+  const getServiceName = (srv: { name: string; nameRu?: string; nameEn?: string }) => {
+    if (currentLang === 'ru' && srv.nameRu) return srv.nameRu;
+    if (currentLang === 'en' && srv.nameEn) return srv.nameEn;
+    return srv.name;
+  };
+
+  const t = translations[currentLang].modal;
+  const options = serviceTypes && serviceTypes.length > 0
+    ? serviceTypes.map(getServiceName)
+    : t.productOptions;
+
+  const [productType, setProductType] = useState(options[0] || 'Korporativ Uniforma');
   const [quantity, setQuantity] = useState<number>(100);
   const [phone, setPhone] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
   if (!isOpen) return null;
 
-  const t = translations[currentLang].modal;
   const daysEstimate = Math.max(2, Math.ceil(quantity / 150));
 
   const handleSend = (e: React.FormEvent) => {
@@ -32,7 +43,7 @@ export const OrderCalculatorModal: React.FC<OrderCalculatorModalProps> = ({
     if (!phone) return;
 
     addCalcInquiry({
-      productType,
+      productType: productType || options[0] || 'Korporativ Uniforma',
       quantity,
       estimatedDays: daysEstimate,
       phone,
@@ -99,7 +110,7 @@ export const OrderCalculatorModal: React.FC<OrderCalculatorModalProps> = ({
                 onChange={(e) => setProductType(e.target.value)}
                 className="w-full px-4 py-3 text-sm rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-[#1E1A5B] outline-none"
               >
-                {t.productOptions.map((opt, i) => (
+                {options.map((opt, i) => (
                   <option key={i} value={opt}>{opt}</option>
                 ))}
               </select>

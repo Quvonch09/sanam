@@ -101,9 +101,22 @@ CREATE POLICY "Allow all" ON feedbacks FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all" ON leads FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all" ON calc_inquiries FOR ALL USING (true) WITH CHECK (true);
 
+-- 8. Service Types table (Buyurtma turlari)
+CREATE TABLE IF NOT EXISTS service_types (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  name_ru TEXT,
+  name_en TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE service_types ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all" ON service_types FOR ALL USING (true) WITH CHECK (true);
+
 -- Enable real-time for key tables
 ALTER PUBLICATION supabase_realtime ADD TABLE products;
 ALTER PUBLICATION supabase_realtime ADD TABLE categories;
+ALTER PUBLICATION supabase_realtime ADD TABLE service_types;
 ALTER PUBLICATION supabase_realtime ADD TABLE news;
 ALTER PUBLICATION supabase_realtime ADD TABLE team_members;
 ALTER PUBLICATION supabase_realtime ADD TABLE feedbacks;

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { AppProvider, useApp, ProductItem, NewsItem, TeamMember, CategoryItem } from '@/context/AppContext';
+import { AppProvider, useApp, ProductItem, NewsItem, TeamMember, CategoryItem, ServiceTypeItem } from '@/context/AppContext';
 import { SanamLogo } from '@/components/SanamLogo';
 import { Language, translations } from '@/data/translations';
 import { slugify } from '@/utils/slugify';
@@ -36,6 +36,10 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
     addCategory,
     updateCategory,
     deleteCategory,
+    serviceTypes,
+    addServiceType,
+    updateServiceType,
+    deleteServiceType,
     products,
     addProduct,
     updateProduct,
@@ -62,7 +66,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
   const tAdmin = translations[currentLang].admin;
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'categories' | 'team' | 'news' | 'leads' | 'feedback'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'categories' | 'services' | 'team' | 'news' | 'leads' | 'feedback'>('dashboard');
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -89,6 +93,12 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(null);
+
+  const [showServiceModal, setShowServiceModal] = useState(false);
+  const [editingService, setEditingService] = useState<ServiceTypeItem | null>(null);
+  const [serviceName, setServiceName] = useState('');
+  const [serviceNameRu, setServiceNameRu] = useState('');
+  const [serviceNameEn, setServiceNameEn] = useState('');
 
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -358,6 +368,36 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
     setShowCategoryModal(false);
   };
 
+  const handleServiceSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!serviceName.trim()) return;
+
+    if (editingService) {
+      updateServiceType(editingService.id, {
+        name: serviceName.trim(),
+        nameRu: serviceNameRu.trim() || undefined,
+        nameEn: serviceNameEn.trim() || undefined,
+      });
+    } else {
+      addServiceType({
+        name: serviceName.trim(),
+        nameRu: serviceNameRu.trim() || undefined,
+        nameEn: serviceNameEn.trim() || undefined,
+      });
+    }
+
+    setEditingService(null);
+    setShowServiceModal(false);
+  };
+
+  const openEditService = (srv: ServiceTypeItem) => {
+    setEditingService(srv);
+    setServiceName(srv.name);
+    setServiceNameRu(srv.nameRu || '');
+    setServiceNameEn(srv.nameEn || '');
+    setShowServiceModal(true);
+  };
+
   return (
     <div className={`min-h-screen flex font-sans transition-colors duration-300 ${
       isDarkMode ? 'bg-slate-950 text-slate-100' : 'bg-slate-100 text-slate-900'
@@ -396,6 +436,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
               { id: 'dashboard', label: tAdmin.tabs.dashboard, icon: '📊' },
               { id: 'products', label: tAdmin.tabs.products, icon: '👕', badge: products.length },
               { id: 'categories', label: tAdmin.tabs.categories, icon: '🏷️', badge: categories.length },
+              { id: 'services', label: tAdmin.tabs.services, icon: '📋', badge: serviceTypes.length },
               { id: 'team', label: tAdmin.tabs.team, icon: '👔', badge: teamList.length },
               { id: 'news', label: tAdmin.tabs.news, icon: '📰', badge: newsList.length },
               { id: 'leads', label: tAdmin.tabs.leads, icon: '📥', badge: leads.length + calcInquiries.length },
@@ -469,6 +510,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
               {activeTab === 'dashboard' && '📊'}
               {activeTab === 'products' && '👕'}
               {activeTab === 'categories' && '🏷️'}
+              {activeTab === 'services' && '📋'}
               {activeTab === 'team' && '👔'}
               {activeTab === 'news' && '📰'}
               {activeTab === 'leads' && '📥'}
@@ -479,6 +521,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 {activeTab === 'dashboard' && tAdmin.tabs.dashboard}
                 {activeTab === 'products' && tAdmin.tabs.products}
                 {activeTab === 'categories' && tAdmin.tabs.categories}
+                {activeTab === 'services' && tAdmin.tabs.services}
                 {activeTab === 'team' && tAdmin.tabs.team}
                 {activeTab === 'news' && tAdmin.tabs.news}
                 {activeTab === 'leads' && tAdmin.tabs.leads}
@@ -911,6 +954,76 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     <button
                       onClick={() => deleteCategory(c.id)}
                       className="p-2 bg-red-500/10 text-red-400 rounded-xl hover:bg-red-500/20"
+                    >
+                      <Trash className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* BUYURTMA TURLARI TAB */}
+        {activeTab === 'services' && (
+          <div className="space-y-6 animate-in fade-in duration-200">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className={`text-2xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{tAdmin.tabs.services}</h2>
+                <p className="text-xs text-slate-400">{tAdmin.form.tabDescServices}</p>
+              </div>
+
+              <button
+                onClick={() => {
+                  setEditingService(null);
+                  setServiceName('');
+                  setServiceNameRu('');
+                  setServiceNameEn('');
+                  setShowServiceModal(true);
+                }}
+                className="px-5 py-3 bg-[#FFC107] hover:bg-amber-400 text-[#1E1A5B] text-xs font-extrabold rounded-2xl shadow-lg flex items-center gap-2 self-start sm:self-auto"
+              >
+                <span>📋 {tAdmin.actions.addServiceType}</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {serviceTypes.map((srv, idx) => (
+                <div
+                  key={srv.id}
+                  className={`border rounded-2xl p-4 flex items-center justify-between transition-all ${
+                    isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+                  }`}
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-full bg-[#FFC107]/20 text-[#FFC107] text-[10px] font-extrabold flex items-center justify-center flex-shrink-0">
+                        {idx + 1}
+                      </span>
+                      <h4 className={`text-sm font-extrabold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                        {srv.name}
+                      </h4>
+                    </div>
+                    {(srv.nameRu || srv.nameEn) && (
+                      <div className="text-[11px] text-slate-400 pl-8 space-y-0.5">
+                        {srv.nameRu && <p>🇷🇺 {srv.nameRu}</p>}
+                        {srv.nameEn && <p>🇬🇧 {srv.nameEn}</p>}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex gap-1 flex-shrink-0">
+                    <button
+                      onClick={() => openEditService(srv)}
+                      className="p-2 bg-blue-500/10 text-blue-400 rounded-xl hover:bg-blue-500/20 transition-colors"
+                      title={tAdmin.actions.edit}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => deleteServiceType(srv.id)}
+                      className="p-2 bg-red-500/10 text-red-400 rounded-xl hover:bg-red-500/20 transition-colors"
+                      title={tAdmin.actions.delete}
                     >
                       <Trash className="w-4 h-4" />
                     </button>
@@ -1483,6 +1596,63 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <div className="pt-2 flex gap-3">
                 <button type="submit" className="flex-1 py-3 bg-[#FFC107] text-[#1E1A5B] font-extrabold text-xs rounded-xl shadow">{tAdmin.actions.save}</button>
                 <button type="button" onClick={() => setShowCategoryModal(false)} className="px-5 py-3 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl">{tAdmin.actions.close}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 2b. SERVICE TYPE MODAL */}
+      {showServiceModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className={`border rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-6 relative shadow-2xl ${
+            isDarkMode ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'
+          }`}>
+            <div className="flex items-center justify-between border-b border-slate-700/50 pb-4">
+              <h3 className="text-xl font-black">📋 {editingService ? tAdmin.form.editServiceType : tAdmin.actions.addServiceType}</h3>
+              <button onClick={() => setShowServiceModal(false)} className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center font-bold">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleServiceSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold uppercase mb-1">{tAdmin.form.serviceTypeName} *</label>
+                <input
+                  type="text"
+                  required
+                  value={serviceName}
+                  onChange={(e) => setServiceName(e.target.value)}
+                  placeholder="Ulgurji kiyim tikish"
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white outline-none focus:ring-2 focus:ring-[#FFC107]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase mb-1">{tAdmin.form.serviceTypeNameRu}</label>
+                <input
+                  type="text"
+                  value={serviceNameRu}
+                  onChange={(e) => setServiceNameRu(e.target.value)}
+                  placeholder="Оптовый пошив одежды"
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white outline-none focus:ring-2 focus:ring-[#FFC107]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase mb-1">{tAdmin.form.serviceTypeNameEn}</label>
+                <input
+                  type="text"
+                  value={serviceNameEn}
+                  onChange={(e) => setServiceNameEn(e.target.value)}
+                  placeholder="Wholesale garment manufacturing"
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white outline-none focus:ring-2 focus:ring-[#FFC107]"
+                />
+              </div>
+
+              <div className="pt-2 flex gap-3">
+                <button type="submit" className="flex-1 py-3 bg-[#FFC107] text-[#1E1A5B] font-extrabold text-xs rounded-xl shadow">{tAdmin.actions.save}</button>
+                <button type="button" onClick={() => setShowServiceModal(false)} className="px-5 py-3 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl">{tAdmin.actions.close}</button>
               </div>
             </form>
           </div>
