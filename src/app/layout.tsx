@@ -37,6 +37,19 @@ export const metadata: Metadata = {
     locale: "uz_UZ",
     type: "website",
   },
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: {
+      index: false,
+      follow: false,
+      noimageindex: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'none',
+      'max-snippet': -1,
+    },
+  },
   verification: {
     google: "2UZijNBxI0TzwmiR9KcDdYPENA1z7ZZaXNTxthUhiGE",
   },
