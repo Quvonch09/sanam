@@ -62,6 +62,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="uz" className={`${inter.variable} ${robotoMono.variable} scroll-smooth antialiased`}>
+      <head>
+        <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
+        <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
+        <meta name="yandex" content="none" />
+        <meta name="bingbot" content="noindex, nofollow, noarchive, nosnippet" />
+      </head>
       <body className="min-h-full flex flex-col font-sans bg-white text-slate-900">
         {children}
       </body>
