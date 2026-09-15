@@ -38,15 +38,13 @@ export const metadata: Metadata = {
     type: "website",
   },
   robots: {
-    index: false,
-    follow: false,
-    nocache: true,
+    index: true,
+    follow: true,
     googleBot: {
-      index: false,
-      follow: false,
-      noimageindex: true,
+      index: true,
+      follow: true,
       'max-video-preview': -1,
-      'max-image-preview': 'none',
+      'max-image-preview': 'large',
       'max-snippet': -1,
     },
   },
@@ -62,12 +60,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="uz" className={`${inter.variable} ${robotoMono.variable} scroll-smooth antialiased`}>
-      <head>
-        <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
-        <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
-        <meta name="yandex" content="none" />
-        <meta name="bingbot" content="noindex, nofollow, noarchive, nosnippet" />
-      </head>
       <body className="min-h-full flex flex-col font-sans bg-white text-slate-900">
         {children}
       </body>
