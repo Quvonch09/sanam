@@ -139,33 +139,30 @@ export const NewsSection: React.FC<NewsSectionProps> = ({ currentLang }) => {
             </h3>
 
             {/* News Media Area */}
-            {(selectedNews.videoUrl || selectedNews.imageUrl) && (
-              <div className="space-y-4 my-2">
-                {selectedNews.videoUrl && (
-                  <div className={`rounded-2xl overflow-hidden border bg-black shadow-xl ${
-                    isDarkMode ? 'border-slate-800' : 'border-slate-200'
-                  }`}>
-                    <video
-                      src={selectedNews.videoUrl}
-                      controls
-                      autoPlay
-                      preload="metadata"
-                      playsInline
-                      className="w-full max-h-96 mx-auto object-contain"
-                    />
-                  </div>
-                )}
-                {selectedNews.imageUrl && (
-                  <img
-                    src={selectedNews.imageUrl}
-                    alt={selectedNews.title}
-                    className={`w-full max-h-80 object-cover rounded-2xl border ${
-                      isDarkMode ? 'border-slate-800' : 'border-slate-200'
-                    }`}
-                  />
-                )}
+            {selectedNews.videoUrl ? (
+              <div className={`rounded-2xl overflow-hidden border bg-black shadow-xl my-2 ${
+                isDarkMode ? 'border-slate-800' : 'border-slate-200'
+              }`}>
+                <video
+                  src={selectedNews.videoUrl}
+                  controls
+                  autoPlay
+                  preload="metadata"
+                  playsInline
+                  className="w-full max-h-96 mx-auto object-contain"
+                />
               </div>
-            )}
+            ) : selectedNews.imageUrl ? (
+              <div className="my-2">
+                <img
+                  src={selectedNews.imageUrl}
+                  alt={selectedNews.title}
+                  className={`w-full max-h-80 object-cover rounded-2xl border ${
+                    isDarkMode ? 'border-slate-800' : 'border-slate-200'
+                  }`}
+                />
+              </div>
+            ) : null}
 
             <div className={`text-sm leading-relaxed font-medium whitespace-pre-line ${
               isDarkMode ? 'text-slate-300' : 'text-slate-800'

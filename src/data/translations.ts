@@ -143,7 +143,7 @@ export const translations = {
         },
         {
           title: "Hamyonbop ulgurji narxlar",
-          desc: "To'g'ridan-to me'moriy ishlab chiqaruvchi narxlari va qulay chegirmalar.",
+          desc: "To'g'ridan-to'g'ri ishlab chiqaruvchi narxlari va qulay chegirmalar.",
         },
         {
           title: "Individual yondashuv",

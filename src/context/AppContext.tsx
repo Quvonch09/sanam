@@ -147,7 +147,6 @@ const initialNews: NewsItem[] = [
     category: 'Vakansiya',
     summary: '3 000 000 – 3 500 000 so\'m oylik, bepul tushlik, yotoqxona, bog\'cha va bepul xizmat avtobusi bilan ishga taklif qilamiz.',
     content: 'SANAM Tikuvchilik Fabrikasi tajribali tikuvchilarni ishga taklif etadi! Davlat buyurtmalari asosida erkaklar ko\'ylaklari, maktab formalari, kurtkalar, mudofaa va IIV xodimlari dalaviy formalari va eksport ishchi kiyimlari tikiladi.\n\n💰 Oylik maosh: 3 000 000 – 3 500 000 so\'m (Ishbay 08:00-17:00)\n\n🎁 Bepul sharoitlar:\n- 150 o\'rinli oshxonada bepul tushlik\n- 20 o\'rinli yotoqxona va 20 o\'rinli bog\'cha\n- Qarshi tumanining Xonyon, Ertepa, Mirmiron, Avrora, Kochkak, Kamandi, Boston yo\'nalishida bepul xizmat avtobusi!\n\n📍 Manzil: Qarshi sh., I.Karimov k., 221-uy.\n📞 Tel: +998 88 805 22 28, +998 97 902 18 18, +998 75 221 75 65',
-    imageUrl: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?q=80&w=800&auto=format&fit=crop',
   },
   {
     id: 'news-store-school',
@@ -156,7 +155,6 @@ const initialNews: NewsItem[] = [
     category: 'Savdo do\'koni',
     summary: 'Qarshi shahridagi do\'konimizda erkaklar klassik ko\'ylaklari (40.000 so\'m) va maktab formalari (200.000 so\'m) sotuvda!',
     content: '🏢 Sanam Tikuvchilik Fabrikasi savdo do\'koni Qarshi shahrida sizning xizmatingizda!\n\n👔 Keng assortimentda:\n- Erkaklar uchun klassik oq va rangli ko\'ylaklar (40.000 so\'m)\n- Maktab formalari to\'plami (200.000 so\'m)\n- Korxona, shifoxona, harbiy va qo\'riqlash xizmati uniformalari\n\n✂️ O\'z o\'lchamingizda, istalgan uslubda va sifatli matolardan tikib beriladi!\n📞 Buyurtma uchun: +998 90 313 77 88 / +998 87 805 66 66',
-    imageUrl: 'https://images.unsplash.com/photo-1588072432836-e10032774350?q=80&w=800&auto=format&fit=crop',
   },
   {
     id: 'news-jeans-turkish',
@@ -165,7 +163,6 @@ const initialNews: NewsItem[] = [
     category: 'Yangi to\'plam',
     summary: 'Turkiya stili asosida tikilgan 48-56 razmerdagi zamonaviy va chidamli erkaklar jinsi dvoyka to\'plami sotuvda.',
     content: 'Erkaklar uchun jinsi dvoyka Turkiya stili asosida tikilgan.\nRazmer: 48-56 razmergacha sotuvda bor.\nIkki xil ko\'rkam ranglari mavjud.\nSifatli 100% denim matosi va qulay bichim.\n\n☎️ Buyurtma uchun: +998 87 805 66 66',
-    imageUrl: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?q=80&w=800&auto=format&fit=crop',
   },
   {
     id: 'news-quality-principle',
@@ -174,7 +171,6 @@ const initialNews: NewsItem[] = [
     category: 'Sifat nazorati',
     summary: 'Sanam tikuvchilik fabrikasida har bir mahsulot mijoz qo\'liga yetib borishidan oldin sifat nazoratidan puxta o\'tkaziladi.',
     content: '✅ Sifat — bizning ustuvor tamoyilimiz!\nSanam tikuvchilik fabrikasida har bir mahsulot mijoz qo\'liga yetib borishidan oldin sifat nazoratidan puxta o\'tkaziladi.\n✨ Sifat tasodif emas, u mehnat va mas\'uliyat natijasidir.\n\n📩 Buyurtmalar va hamkorlik uchun biz bilan bog\'laning!',
-    imageUrl: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?q=80&w=800&auto=format&fit=crop',
   },
   {
     id: 'news-special-uniforms',
@@ -183,7 +179,6 @@ const initialNews: NewsItem[] = [
     category: 'Spetsodejda',
     summary: 'Sanoat korxonalari, tibbiyot, harbiy va qo\'riqlash xizmatlari uchun maxsus ish kiyimlari va uniformalar.',
     content: 'Siz sifatli va qulay maxsus ish kiyimlarini izlayapsizmi? Unda Sanam tikuvchilik fabrikasining savdo do\'koniga tashrif buyuring!\n\nBizda:\n- Korxona va tashkilotlar uchun maxsus ish kiyimlari\n- Tibbiyot xodimlari formasi\n- Harbiy va qo\'riqlash xizmati kiyimlari\n- Erkaklar klassik ko\'ylaklari\n\n📍 Manzil: Qarshi shahri, Sanam tikuvchilik fabrikasi savdo do\'koni.',
-    imageUrl: 'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?q=80&w=800&auto=format&fit=crop',
   },
   {
     id: 'news-1',
@@ -192,7 +187,6 @@ const initialNews: NewsItem[] = [
     category: 'Texnologiya',
     summary: 'Fabrikamiz ishlab chiqarish unumdorligini 40% ga oshiradigan avtomatlashtirilgan yangi dastgohlarni ishga tushirdi.',
     content: 'SANAM OFFICIAL fabrikasi Qashqadaryo viloyatida eng zamonaviy tikuv uskunalarini ornatishda davom etmoqda.',
-    imageUrl: 'https://images.unsplash.com/photo-1581092335397-9583fe92d232?q=80&w=800&auto=format&fit=crop',
   },
 ];
 
