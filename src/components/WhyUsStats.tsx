@@ -90,27 +90,29 @@ export const WhyUsStats: React.FC<WhyUsStatsProps> = ({ currentLang }) => {
               </p>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {t.partnersList.map((partner: any, idx: number) => (
                 <div
                   key={idx}
-                  className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-3 hover:bg-white/10 hover:border-[#FFC107]/40 transition-all duration-300 relative overflow-hidden group text-left"
+                  className="bg-white/5 border border-white/10 rounded-2xl p-6 sm:p-7 space-y-4 hover:bg-white/10 hover:border-[#FFC107]/50 transition-all duration-300 relative overflow-hidden group text-left flex flex-col justify-between shadow-lg"
                 >
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#FFC107]/10 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#FFC107]/15 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
                   
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#FFC107] bg-[#FFC107]/10 px-2 py-0.5 rounded-md border border-[#FFC107]/20">
-                      {partner.project}
-                    </span>
-                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-[#1E1A5B] bg-[#FFC107] px-2.5 py-1 rounded-md shadow-sm font-mono">
+                        {partner.project}
+                      </span>
+                    </div>
 
-                  <h4 className="text-base font-extrabold text-white tracking-tight">
-                    {partner.name}
-                  </h4>
-                  
-                  <p className="text-xs text-slate-300 leading-relaxed font-medium">
-                    {partner.desc}
-                  </p>
+                    <h4 className="text-base sm:text-lg font-black text-white tracking-tight leading-snug group-hover:text-[#FFC107] transition-colors">
+                      {partner.name}
+                    </h4>
+                    
+                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
+                      {partner.desc}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>

@@ -153,24 +153,29 @@ export const translations = {
       partnersTitle: "Yirik Hamkorlarimiz va Buyurtmachilarimiz",
       partnersList: [
         {
-          name: "Qarshi Ximzavod",
-          project: "5000+ ishchi formasi",
-          desc: "Ximzavod ishchilariga maxsus issiqlikka chidamli va sifatli ishchi formalar to'liq tikib berilgan."
+          name: "O'zbekiston Respublikasi Mudofaa vazirligi",
+          project: "11 210 ta kostyum • 2.19 mlrd so'm",
+          desc: "Muddatli harbiy xizmatchilar uchun yozgi bayramona kostyum 11 210 ta tikib berilib, 2 197 160 000 so'mlik yirik davlat buyurtmasi yuqori sifatda topshirildi."
         },
         {
-          name: "Qashqadaryo HETK",
-          project: "Elektrotarmoq xodimlari",
-          desc: "Viloyat energetika sohasi ishchilari uchun yuqori kuchlanishdan himoya qiluvchi uniformalar tikilgan."
+          name: 'Belarus Respublikasi "Легпромразвитие"',
+          project: "Eksport • $300 000",
+          desc: 'Belarus Respublikasining "Легпромразвитие" tashkiloti uchun maxsus ish kiyimlarini tikuv xizmati bajarilib, 300 000 AQSH dollarlik xalqaro buyurtma sifatli yetkazib berildi.'
         },
         {
-          name: "Qashqadaryo Suvsoz",
-          project: "Suvsoz ishchi formalari",
-          desc: "Suv xo'jaligi xodimlari uchun namlikka chidamli va nur qaytaruvchi maxsus uniformalar ishlab chiqarilgan."
+          name: '"Hududiy elektr tarmoqlari" AJ Qashqadaryo filiali',
+          project: "Spetsodejda • 1.79 mlrd so'm",
+          desc: "Viloyat energetika sohasi xodimlari uchun maxsus ish kiyimlari tiktirish bo'yicha 1 795 800 000 so'mlik buyurtma to'liq va sifatli tikib berildi."
         },
         {
-          name: "Qarshi Cho'lquvar",
-          project: "Qurilish maxsus kiyimlari",
-          desc: "Yirik qurilish loyihalari ishchilari uchun o'ta chidamli matolardan chiroyli formalar tikilgan."
+          name: '"Hududiy elektr tarmoqlari" AJ Toshkent filiali (I-bosqich)',
+          project: "Spetsodejda • 1.03 mlrd so'm",
+          desc: "Toshkent hududiy elektr tarmoqlari ishchilari uchun maxsus ish kiyimlari tiktirish bo'yicha 1 038 016 000 so'mlik buyurtma muvaffaqiyatli bajarildi."
+        },
+        {
+          name: '"Hududiy elektr tarmoqlari" AJ Toshkent filiali (II-bosqich)',
+          project: "Spetsodejda • 819.6 mln so'm",
+          desc: "Maxsus ish kiyimlari va himoya uniformalari tiktirish bo'yicha 819 683 000 so'mlik qo'shimcha yirik buyurtma qabul qilinib, sifatli topshirildi."
         }
       ],
     },
@@ -513,24 +518,29 @@ export const translations = {
       partnersTitle: "Наши Крупные Партнеры и Заказчики",
       partnersList: [
         {
-          name: "Каршинский Химзавод",
-          project: "5000+ рабочих комплектов",
-          desc: "Пошив качественной термостойкой спецодежды и униформы для рабочих химзавода."
+          name: "Министерство обороны Республики Узбекистан",
+          project: "11 210 костюмов • 2.19 млрд сум",
+          desc: "Пошив 11 210 летних праздничных костюмов для военнослужащих срочной службы на сумму 2 197 160 000 сумов с гарантией высокого качества."
         },
         {
-          name: "Кашкадарья РЭС (HETK)",
-          project: "Спецодежда для энергетиков",
-          desc: "Изготовление защитной спецодежды для сотрудников электросетей области."
+          name: 'ОАО "Легпромразвитие" (Республика Беларусь)',
+          project: "Экспорт • $300 000",
+          desc: "Выполнение услуг по пошиву специальной рабочей одежды для предприятия «Легпромразвитие» (Беларусь) на сумму 300 000 долларов США."
         },
         {
-          name: "Кашкадарья Сувсоз",
-          project: "Формы для водоканала",
-          desc: "Влагозащитная спецодежда со светоотражающими элементами для сотрудников водоснабжения."
+          name: 'Кашкадарьинский филиал АО "РЭС" (HETK)',
+          project: "Спецодежда • 1.79 млрд сум",
+          desc: "Пошив специализированной рабочей одежды для работников электросетей Кашкадарьинской области на сумму 1 795 800 000 сумов."
         },
         {
-          name: "Карши Чулкувар",
-          project: "Строительная спецодежда",
-          desc: "Рабочая форма из прочных и износостойких тканей для сотрудников крупной строительной компании."
+          name: 'Ташкентский филиал АО "РЭС" (I-этап)',
+          project: "Спецодежда • 1.03 млрд сум",
+          desc: "Выполнение крупного заказа по пошиву спецодежды для сотрудников Ташкентских электросетей на сумму 1 038 016 000 сумов."
+        },
+        {
+          name: 'Ташкентский филиал АО "РЭС" (II-этап)',
+          project: "Спецодежда • 819.6 млн сум",
+          desc: "Пошив надежной и безопасной специальной рабочей одежды на сумму 819 683 000 сумов."
         }
       ],
     },
@@ -858,27 +868,32 @@ export const translations = {
           desc: "Tailored to your exact specifications, patterns, and fabric choices.",
         },
       ],
-      partnersTitle: "Our Major Partners & Clients",
+      partnersTitle: "Our Major Partners & Projects",
       partnersList: [
         {
-          name: "Karshi Chemical Plant",
-          project: "5000+ worker uniforms",
-          desc: "Tailored high-quality specialized flame-resistant workwear and uniforms for chemical plant workers."
+          name: "Ministry of Defense of the Republic of Uzbekistan",
+          project: "11,210 suits • 2.19B UZS",
+          desc: "Manufactured 11,210 festive summer military uniforms for servicemen under a major government contract valued at 2,197,160,000 UZS."
         },
         {
-          name: "Qashqadaryo Electric Grid (HETK)",
-          project: "Electrician uniforms",
-          desc: "Manufactured protective and heat-resistant uniforms for regional electricity grid employees."
+          name: '"Legpromrazvitie" (Republic of Belarus)',
+          project: "Export Contract • $300,000",
+          desc: "High-quality international export contract for specialized industrial workwear manufacturing valued at $300,000 USD."
         },
         {
-          name: "Qashqadaryo Suvsoz",
-          project: "Water utility workwear",
-          desc: "Waterproof protective workwear with reflective strips for water supply workers."
+          name: 'Qashqadaryo Regional Electric Grid (HETK)',
+          project: "Workwear • 1.79B UZS",
+          desc: "Manufactured protective and insulated work uniforms for regional power grid workers under a 1,795,800,000 UZS contract."
         },
         {
-          name: "Karshi Cholquvar",
-          project: "Construction workwear",
-          desc: "Heavy-duty protective uniforms for staff of a major regional construction enterprise."
+          name: 'Tashkent Regional Electric Grid (Stage I)',
+          project: "Workwear • 1.03B UZS",
+          desc: "Manufactured specialized workwear and safety uniforms for Tashkent power grid personnel valued at 1,038,016,000 UZS."
+        },
+        {
+          name: 'Tashkent Regional Electric Grid (Stage II)',
+          project: "Workwear • 819.6M UZS",
+          desc: "Successful production and delivery of specialized protective garments under a contract worth 819,683,000 UZS."
         }
       ],
     },
