@@ -6,7 +6,8 @@
     "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:images": "playwright test"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",
@@ -17,6 +18,7 @@
   },
   "devDependencies": {
     "@netlify/plugin-nextjs": "^5.15.13",
+    "@playwright/test": "^1.65.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

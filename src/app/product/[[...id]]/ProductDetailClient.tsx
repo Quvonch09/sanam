@@ -9,6 +9,7 @@ import { Factory, Scissors, Shirt, Layers } from '@/components/Icons';
 import { slugify } from '@/utils/slugify';
 import { translations } from '@/data/translations';
 import { ArrowLeft, Copy, Check, Sparkles, Share2 } from 'lucide-react';
+import { getProductImages } from '@/utils/productImages';
 
 function ProductDetailContent() {
   const { products, isDarkMode, currentLang, setLanguage } = useApp();
@@ -37,13 +38,9 @@ function ProductDetailContent() {
     (p) => p.id === slug || slugify(p.name) === slug || slugify(p.model) === slug
   );
 
-  const [activeImg, setActiveImg] = useState<string>('');
-
-  useEffect(() => {
-    if (product) {
-      setActiveImg(product.imageUrl || '');
-    }
-  }, [product]);
+  const [selectedImg, setSelectedImg] = useState<string>('');
+  const images = product ? getProductImages(product) : [];
+  const activeImg = images.includes(selectedImg) ? selectedImg : (images[0] ?? '');
 
   const getCardIcon = (category: string) => {
     switch (category) {
@@ -177,7 +174,7 @@ function ProductDetailContent() {
                   <img
                     src={activeImg}
                     alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-contain"
                   />
                   {product.badge && (
                     <span className="absolute top-4 left-4 text-[10px] font-extrabold uppercase tracking-wider text-[#1E1A5B] bg-[#FFC107] px-3 py-1.5 rounded-md shadow">
@@ -194,19 +191,19 @@ function ProductDetailContent() {
               )}
 
               {/* Thumbnails Gallery */}
-              {product.images && product.images.length > 1 && (
+              {images.length > 1 && (
                 <div className="flex flex-wrap gap-2 pt-2 justify-center">
-                  {product.images.map((img, idx) => (
+                  {images.map((img, idx) => (
                     <button
                       key={idx}
-                      onClick={() => setActiveImg(img)}
+                      onClick={() => setSelectedImg(img)}
                       className={`w-14 h-14 rounded-xl overflow-hidden border-2 transition-all ${
                         activeImg === img
                           ? 'border-[#FFC107] scale-105 shadow-md'
                           : 'border-transparent hover:border-slate-400 opacity-70 hover:opacity-100'
                       }`}
                     >
-                      <img src={img} alt={`${product.name} - ${idx + 1}`} className="w-full h-full object-cover" />
+                      <img src={img} alt={`${product.name} - ${idx + 1}`} className="w-full h-full object-contain" />
                     </button>
                   ))}
                 </div>
