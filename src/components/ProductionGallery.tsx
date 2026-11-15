@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useApp, ProductItem } from '@/context/AppContext';
 import { Language, translations } from '../data/translations';
 import { Eye, Shirt, Scissors, Factory, Sparkles, Layers, X } from '@/components/Icons';
+import { getProductImages } from '@/utils/productImages';
 
 interface ProductionGalleryProps {
   currentLang: Language;
@@ -13,10 +14,10 @@ interface ProductionGalleryProps {
 const ProductCardImage: React.FC<{
   item: ProductItem;
   getCardIcon: (category: string) => React.ReactNode;
-  onZoom: () => void;
+  onZoom: (index: number) => void;
   getTranslatedBadge: (badge?: string) => string;
 }> = ({ item, getCardIcon, onZoom, getTranslatedBadge }) => {
-  const images = item.images && item.images.length > 0 ? item.images : (item.imageUrl ? [item.imageUrl] : []);
+  const images = getProductImages(item);
   const [activeIndex, setActiveIndex] = useState(0);
 
   const handlePrev = (e: React.MouseEvent) => {
@@ -42,7 +43,7 @@ const ProductCardImage: React.FC<{
         <img
           src={currentImage}
           alt={item.name}
-          className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          className="absolute inset-0 w-full h-full object-contain"
         />
       ) : (
         <>
@@ -63,7 +64,7 @@ const ProductCardImage: React.FC<{
         <button
           onClick={(e) => {
             e.stopPropagation();
-            onZoom();
+            onZoom(activeIndex);
           }}
           className="w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center text-white backdrop-blur-md transition-colors"
         >
@@ -107,15 +108,15 @@ const ProductCardImage: React.FC<{
   );
 };
 
-const ProductModalCarousel: React.FC<{ images: string[]; alt: string }> = ({ images, alt }) => {
-  const [activeIndex, setActiveIndex] = useState(0);
+const ProductModalCarousel: React.FC<{ images: string[]; alt: string; initialIndex: number }> = ({ images, alt, initialIndex }) => {
+  const [activeIndex, setActiveIndex] = useState(initialIndex);
 
   return (
-    <div className="relative w-full h-56 bg-slate-950">
+    <div className="relative w-full h-[50dvh] sm:h-[60dvh] max-h-[32rem] bg-slate-950">
       <img
         src={images[activeIndex]}
         alt={alt}
-        className="w-full h-full object-cover"
+        className="w-full h-full object-contain"
       />
       {images.length > 1 && (
         <>
@@ -157,6 +158,7 @@ export const ProductionGallery: React.FC<ProductionGalleryProps> = ({
   const { products, categories, isDarkMode } = useApp();
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [selectedImage, setSelectedImage] = useState<ProductItem | null>(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   const t = translations[currentLang].products;
 
@@ -259,7 +261,10 @@ export const ProductionGallery: React.FC<ProductionGalleryProps> = ({
               <ProductCardImage
                 item={item}
                 getCardIcon={getCardIcon}
-                onZoom={() => setSelectedImage(item)}
+                onZoom={(index) => {
+                  setSelectedImageIndex(index);
+                  setSelectedImage(item);
+                }}
                 getTranslatedBadge={getTranslatedBadge}
               />
 
@@ -320,7 +325,7 @@ export const ProductionGallery: React.FC<ProductionGalleryProps> = ({
       {/* Product Details Modal */}
       {selectedImage && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className={`rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 relative max-h-[90vh] overflow-y-auto shadow-2xl ${
+          <div role="dialog" aria-modal="true" aria-label={selectedImage.name} className={`rounded-3xl max-w-3xl w-full p-6 sm:p-8 space-y-6 relative max-h-[90dvh] overflow-y-auto shadow-2xl ${
             isDarkMode ? 'bg-slate-900 border border-slate-800 text-white' : 'bg-white text-slate-900'
           }`}>
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
@@ -340,16 +345,10 @@ export const ProductionGallery: React.FC<ProductionGalleryProps> = ({
               </button>
             </div>
 
-            {selectedImage.images && selectedImage.images.length > 0 ? (
+            {getProductImages(selectedImage).length > 0 ? (
               <div className="rounded-2xl overflow-hidden border border-slate-700/50">
-                <ProductModalCarousel images={selectedImage.images} alt={selectedImage.name} />
+                <ProductModalCarousel key={selectedImage.id} images={getProductImages(selectedImage)} alt={selectedImage.name} initialIndex={selectedImageIndex} />
               </div>
-            ) : selectedImage.imageUrl ? (
-              <img
-                src={selectedImage.imageUrl}
-                alt={selectedImage.name}
-                className="w-full h-56 object-cover rounded-2xl border border-slate-700"
-              />
             ) : (
               <div className="h-44 bg-gradient-to-tr from-[#1E1A5B] to-[#13103D] rounded-2xl p-6 flex flex-col items-center justify-center text-white text-center space-y-3">
                 {getCardIcon(selectedImage.category)}
