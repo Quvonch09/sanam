@@ -72,6 +72,31 @@ export default async function BarcodeProductPage({ params }: PageProps) {
         </header>
 
         <section className="space-y-6 p-6 sm:p-8">
+          {product.images && product.images.length > 0 && (
+            <div className="space-y-3" aria-label="Mahsulot rasmlari">
+              <div className="overflow-hidden rounded-2xl bg-slate-50 p-3">
+                <img
+                  src={product.images[0]}
+                  alt={`${product.name} — asosiy rasm`}
+                  className="mx-auto max-h-[34rem] w-full object-contain"
+                />
+              </div>
+              {product.images.length > 1 && (
+                <div className="grid grid-cols-3 gap-3">
+                  {product.images.slice(1).map((image, index) => (
+                    <div key={image} className="overflow-hidden rounded-xl bg-slate-50 p-2">
+                      <img
+                        src={image}
+                        alt={`${product.name} — qo‘shimcha rasm ${index + 1}`}
+                        className="h-36 w-full object-contain sm:h-44"
+                        loading="lazy"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           <div>
             <p className="text-xs font-bold uppercase tracking-widest text-amber-700">Mahsulot ma’lumoti</p>
             <h1 className="mt-2 text-2xl font-black leading-tight text-[#1E1A5B] sm:text-3xl">{product.name}</h1>
