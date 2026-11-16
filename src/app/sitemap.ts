@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
 import { initialProducts } from '@/data/products';
+import { barcodeProducts } from '@/data/barcodeProducts';
 import { slugify } from '@/utils/slugify';
 
 export const dynamic = 'force-static';
@@ -14,6 +15,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency: 'weekly' as const,
     priority: 0.8,
   }));
+  const barcodeUrls = barcodeProducts.map((product) => ({
+    url: `${baseUrl}/01/0${product.gtin}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.8,
+  }));
 
   return [
     {
@@ -23,5 +30,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1.0,
     },
     ...productUrls,
+    ...barcodeUrls,
   ];
 }
