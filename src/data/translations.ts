@@ -14,6 +14,7 @@ export const translations = {
       admin: "Admin Panel",
       orderBtn: "Bog'lanish",
       calculatorBtn: "Buyurtma hisoblash",
+      barcode: "Barkod",
     },
     hero: {
       badge: "Sanam Fabrika • Qarshi Tikuvchilik Sexi",
@@ -379,6 +380,7 @@ export const translations = {
       admin: "Админ панель",
       orderBtn: "Связаться",
       calculatorBtn: "Расчет заказа",
+      barcode: "Штрихкод",
     },
     hero: {
       badge: "Швейная фабрика Санам • Швейный цех Карши",
@@ -732,6 +734,7 @@ export const translations = {
       admin: "Admin Panel",
       orderBtn: "Contact Us",
       calculatorBtn: "Order Estimate",
+      barcode: "Barcode",
     },
     hero: {
       badge: "Sanam Garment Factory • Karshi Sewing Workshop",
