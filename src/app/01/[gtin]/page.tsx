@@ -20,9 +20,20 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { gtin } = await params;
   const product = findBarcodeProduct(gtin);
+  const canonicalUrl = product ? `https://www.sanamfactory.uz/01/0${product.gtin}` : undefined;
+  const title = product ? `${product.name} — ${product.size}-o‘lcham | SANAM` : 'Mahsulot topilmadi | SANAM';
+  const description = product
+    ? `${product.name}, ${product.size}-o‘lcham. ${product.description} SANAM Factory mahsuloti.`
+    : 'SANAM mahsulot barkodi.';
+
   return {
-    title: product ? `${product.name} — ${product.size}-o‘lcham | SANAM` : 'Mahsulot topilmadi | SANAM',
-    description: product ? `${product.name}. O‘lcham: ${product.size}. SANAM Factory mahsuloti.` : 'SANAM mahsulot barkodi.',
+    title,
+    description,
+    alternates: canonicalUrl ? { canonical: canonicalUrl } : undefined,
+    openGraph: canonicalUrl
+      ? { title, description, url: canonicalUrl, siteName: 'SANAM Factory', locale: 'uz_UZ', type: 'website' }
+      : undefined,
+    twitter: { card: 'summary', title, description },
   };
 }
 
@@ -30,9 +41,30 @@ export default async function BarcodeProductPage({ params }: PageProps) {
   const { gtin } = await params;
   const product = findBarcodeProduct(gtin);
   if (!product) notFound();
+  const canonicalUrl = `https://www.sanamfactory.uz/01/0${product.gtin}`;
+  const productStructuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    '@id': `${canonicalUrl}#product`,
+    url: canonicalUrl,
+    name: product.name,
+    description: `${product.name}, ${product.size}-o‘lcham. ${product.description}`,
+    brand: { '@type': 'Brand', name: product.brand },
+    gtin13: product.gtin,
+    size: product.size,
+    additionalProperty: {
+      '@type': 'PropertyValue',
+      name: 'GS1 subtype',
+      value: product.subtype,
+    },
+  };
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-900 sm:py-14">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productStructuredData).replace(/</g, '\\u003c') }}
+      />
       <article className="mx-auto max-w-xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl">
         <header className="bg-[#1E1A5B] px-6 py-5 text-white sm:px-8">
           <Link href="/" className="text-xl font-black tracking-[0.2em] text-[#FFC107]">SANAM</Link>
