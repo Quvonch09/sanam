@@ -96,6 +96,25 @@ export const initialServiceTypes: ServiceTypeItem[] = [
   { id: 'srv-17', name: "Boshqa zakaz", nameRu: "Другой заказ", nameEn: "Other custom order" },
 ];
 
+const sortServiceTypes = (items: ServiceTypeItem[]) => [...items].sort((a, b) => {
+  const aNumber = /^srv-(\d+)$/.exec(a.id);
+  const bNumber = /^srv-(\d+)$/.exec(b.id);
+  if (aNumber && bNumber) return Number(aNumber[1]) - Number(bNumber[1]);
+  return a.id.localeCompare(b.id, undefined, { numeric: true });
+});
+
+const mapServiceTypeRow = (row: {
+  id: string;
+  name?: string | null;
+  name_ru?: string | null;
+  name_en?: string | null;
+}): ServiceTypeItem => ({
+  id: row.id,
+  name: row.name ?? '',
+  nameRu: row.name_ru ?? row.name ?? '',
+  nameEn: row.name_en ?? row.name ?? '',
+});
+
 interface AppContextType {
   isDarkMode: boolean;
   toggleTheme: () => void;
@@ -112,9 +131,9 @@ interface AppContextType {
   updateCategory: (id: string, cat: Partial<CategoryItem>) => void;
   deleteCategory: (id: string) => void;
   serviceTypes: ServiceTypeItem[];
-  addServiceType: (srv: Omit<ServiceTypeItem, 'id'>) => void;
-  updateServiceType: (id: string, srv: Partial<ServiceTypeItem>) => void;
-  deleteServiceType: (id: string) => void;
+  addServiceType: (srv: Omit<ServiceTypeItem, 'id'>) => Promise<void>;
+  updateServiceType: (id: string, srv: Partial<ServiceTypeItem>) => Promise<void>;
+  deleteServiceType: (id: string) => Promise<void>;
   products: ProductItem[];
   addProduct: (product: Omit<ProductItem, 'id'>) => void;
   updateProduct: (id: string, product: Partial<ProductItem>) => void;
@@ -210,7 +229,15 @@ const initialFeedbacks: FeedbackItem[] = [
   { id: 'fb-3', name: 'Jasurbek K.', rating: 5, text: 'Qarshi shahridagi eng yaxshi tikuvchilik fabrikasi. Korporativ kiyimlarni qisqa fursatda va alo sifatda tikib berishdi.', date: '2026-07-10', approved: true },
 ];
 
-function mapProduct(row: any): ProductItem {
+interface ProductRow { id: string; name: string; category?: string | null; description?: string | null; desc?: string | null; image_url?: string | null; images?: string[] | null; model?: string | null; sizes?: string | null; material?: string | null; price?: string | null; badge?: string | null; }
+interface CategoryRow { id: string; key?: string | null; label?: string | null; }
+interface NewsRow { id: string; title: string; date?: string | null; category?: string | null; summary?: string | null; content?: string | null; image_url?: string; video_url?: string; }
+interface TeamRow { id: string; name: string; role?: string | null; image_url?: string; phone?: string; }
+interface LeadRow { id: string; name: string; phone: string; service?: string | null; message?: string | null; date?: string | null; status?: LeadItem['status']; }
+interface CalcRow { id: string; product_type?: string | null; quantity?: number | null; estimated_days?: number | null; phone: string; date?: string | null; status?: CalcInquiry['status']; }
+interface FeedbackRow { id: string; name: string; rating?: number | null; text: string; date?: string | null; approved?: boolean | null; }
+
+function mapProduct(row: ProductRow): ProductItem {
   return {
     id: row.id,
     name: row.name,
@@ -226,7 +253,7 @@ function mapProduct(row: any): ProductItem {
   };
 }
 
-function mapCategory(row: any): CategoryItem {
+function mapCategory(row: CategoryRow): CategoryItem {
   return {
     id: row.id,
     key: row.key ?? '',
@@ -234,7 +261,7 @@ function mapCategory(row: any): CategoryItem {
   };
 }
 
-function mapNews(row: any): NewsItem {
+function mapNews(row: NewsRow): NewsItem {
   return {
     id: row.id,
     title: row.title,
@@ -247,7 +274,7 @@ function mapNews(row: any): NewsItem {
   };
 }
 
-function mapTeam(row: any): TeamMember {
+function mapTeam(row: TeamRow): TeamMember {
   return {
     id: row.id,
     name: row.name,
@@ -257,7 +284,7 @@ function mapTeam(row: any): TeamMember {
   };
 }
 
-function mapLead(row: any): LeadItem {
+function mapLead(row: LeadRow): LeadItem {
   return {
     id: row.id,
     name: row.name,
@@ -269,7 +296,7 @@ function mapLead(row: any): LeadItem {
   };
 }
 
-function mapCalc(row: any): CalcInquiry {
+function mapCalc(row: CalcRow): CalcInquiry {
   return {
     id: row.id,
     productType: row.product_type ?? '',
@@ -281,7 +308,7 @@ function mapCalc(row: any): CalcInquiry {
   };
 }
 
-function mapFeedback(row: any): FeedbackItem {
+function mapFeedback(row: FeedbackRow): FeedbackItem {
   return {
     id: row.id,
     name: row.name,
@@ -310,6 +337,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // 1. Initial immediate load from LocalStorage as fallback cache on mount
   useEffect(() => {
+    queueMicrotask(() => {
     try {
       const storedTheme = localStorage.getItem('sanam_theme');
       if (storedTheme === 'dark') setIsDarkMode(true);
@@ -327,12 +355,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (storedCategories) {
         const parsed = JSON.parse(storedCategories);
         if (Array.isArray(parsed) && parsed.length > 0) setCategories(parsed);
-      }
-
-      const storedServices = localStorage.getItem('sanam_service_types');
-      if (storedServices) {
-        const parsed = JSON.parse(storedServices);
-        if (Array.isArray(parsed) && parsed.length > 0) setServiceTypes(parsed);
       }
 
       const storedNews = localStorage.getItem('sanam_news');
@@ -355,14 +377,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {
       console.error('LocalStorage load cache error:', e);
     }
+    });
   }, []);
 
-  // 2. Load all data from Supabase once on mount
-  useEffect(() => {
-    loadAllData();
-  }, []);
-
-  const loadAllData = async () => {
+  async function loadAllData() {
     setIsLoading(true);
     try {
       await Promise.allSettled([
@@ -380,7 +398,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
   const loadProducts = async () => {
     try {
@@ -481,54 +499,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const loadServiceTypes = async () => {
     try {
-      const { data, error } = await supabase.from('service_types').select('*');
-      
-      let localList: ServiceTypeItem[] = [];
-      try {
-        const raw = localStorage.getItem('sanam_service_types');
-        if (raw) localList = JSON.parse(raw);
-      } catch (e) {}
-
+      const { data, error } = await supabase
+        .from('service_types')
+        .select('id, name, name_ru, name_en')
+        .order('id');
       if (error || !data || data.length === 0) {
-        const fallback = localList.length > 0 ? localList : initialServiceTypes;
-        setServiceTypes(fallback);
+        setServiceTypes(initialServiceTypes);
         return;
       }
 
-      const dbMapped: ServiceTypeItem[] = data.map((row: any) => ({
-        id: row.id,
-        name: row.name ?? '',
-        nameRu: row.name_ru ?? row.name,
-        nameEn: row.name_en ?? row.name,
-      }));
-
-      const dbMap = new Map<string, ServiceTypeItem>();
-      dbMapped.forEach((s) => dbMap.set(s.id, s));
-
-      const candidateMap = new Map<string, ServiceTypeItem>();
-      [...initialServiceTypes, ...localList].forEach((s) => candidateMap.set(s.id, s));
-
-      const mergedList: ServiceTypeItem[] = [];
-
-      candidateMap.forEach((localItem, id) => {
-        const dbItem = dbMap.get(id);
-        if (dbItem) {
-          mergedList.push({ ...localItem, ...dbItem });
-          dbMap.delete(id);
-        } else {
-          mergedList.push(localItem);
-        }
-      });
-
-      dbMap.forEach((dbItem) => mergedList.push(dbItem));
-
-      const resultList = mergedList.length > 0 ? mergedList : initialServiceTypes;
-      setServiceTypes(resultList);
-      try {
-        localStorage.setItem('sanam_service_types', JSON.stringify(resultList));
-      } catch (e) {}
+      setServiceTypes(sortServiceTypes(data.map(mapServiceTypeRow)));
     } catch (e) {
       console.error('loadServiceTypes exception:', e);
+      setServiceTypes(initialServiceTypes);
     }
   };
 
@@ -737,6 +720,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  // 2. Load all data from Supabase once on mount, after loaders are initialized.
+  useEffect(() => {
+    queueMicrotask(() => { void loadAllData(); });
+  }, []);
+
   // Explicit full sync method for Admin Panel button
   const syncLocalStorageToSupabase = async (): Promise<{ success: boolean; message: string }> => {
     try {
@@ -792,29 +780,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         totalPushed += rows.length;
       }
 
-      // 3. Service Types
-      let sList: ServiceTypeItem[] = [...initialServiceTypes];
-      const rawServices = localStorage.getItem('sanam_service_types');
-      if (rawServices) {
-        try {
-          const parsed = JSON.parse(rawServices);
-          const map = new Map<string, ServiceTypeItem>();
-          [...initialServiceTypes, ...parsed].forEach((s) => map.set(s.id, s));
-          sList = Array.from(map.values());
-        } catch (e) {}
-      }
-      if (sList.length > 0) {
-        const rows = sList.map((s) => ({
-          id: s.id,
-          name: s.name,
-          name_ru: s.nameRu || s.name,
-          name_en: s.nameEn || s.name,
-        }));
-        await Promise.all(rows.map((row) => adminApi('service_types', 'upsert', row)));
-        totalPushed += rows.length;
-      }
-
-      // 4. News
+      // 3. News
       let nList: NewsItem[] = [...initialNews];
       const rawNews = localStorage.getItem('sanam_news');
       if (rawNews) {
@@ -840,7 +806,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         totalPushed += rows.length;
       }
 
-      // 5. Team
+      // 4. Team
       let tList: TeamMember[] = [...initialTeam];
       const rawTeam = localStorage.getItem('sanam_team');
       if (rawTeam) {
@@ -869,11 +835,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         success: true,
         message: `Muvaffaqiyatli! LocalStoragedan ${totalPushed} ta ma'lumot Supabase bazasiga yuklandi.`,
       };
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('syncLocalStorageToSupabase error:', err);
       return {
         success: false,
-        message: `Xatolik yuz berdi: ${err?.message || 'Noma\'lum xato'}`,
+        message: `Xatolik yuz berdi: ${err instanceof Error ? err.message : 'Noma\'lum xato'}`,
       };
     }
   };
@@ -923,7 +889,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {}
 
     try {
-      const dbFields: any = {};
+      const dbFields: Record<string, string | string[] | null> = {};
       if (updatedFields.key !== undefined) dbFields.key = updatedFields.key;
       if (updatedFields.label !== undefined) dbFields.label = updatedFields.label;
       await adminApi('categories', 'update', dbFields, id);
@@ -947,56 +913,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // ==================== SERVICE TYPES CRUD ====================
-  const addServiceType = async (srv: Omit<ServiceTypeItem, 'id'>) => {
+  const addServiceType = async (srv: Omit<ServiceTypeItem, 'id'>): Promise<void> => {
     const newItem: ServiceTypeItem = { ...srv, id: 'srv-' + Date.now() };
-    const updated = [...serviceTypes, newItem];
-    setServiceTypes(updated);
-    try {
-      localStorage.setItem('sanam_service_types', JSON.stringify(updated));
-    } catch (e) {}
-
-    try {
-      await adminApi('service_types', 'insert', {
-        id: newItem.id,
-        name: newItem.name,
-        name_ru: newItem.nameRu || newItem.name,
-        name_en: newItem.nameEn || newItem.name,
-      });
-    } catch (err) {
-      console.warn('Supabase service_types insert note:', err);
-    }
+    const rows = await adminApi('service_types', 'insert', {
+      id: newItem.id,
+      name: newItem.name,
+      name_ru: newItem.nameRu || newItem.name,
+      name_en: newItem.nameEn || newItem.name,
+    });
+    if (!Array.isArray(rows) || rows.length === 0) throw new Error('Service type insert returned no row');
+    const savedItem = mapServiceTypeRow(rows[0]);
+    setServiceTypes((current) => sortServiceTypes([...current, savedItem]));
   };
 
-  const updateServiceType = async (id: string, updatedFields: Partial<ServiceTypeItem>) => {
-    const updated = serviceTypes.map((s) => (s.id === id ? { ...s, ...updatedFields } : s));
-    setServiceTypes(updated);
-    try {
-      localStorage.setItem('sanam_service_types', JSON.stringify(updated));
-    } catch (e) {}
+  const updateServiceType = async (id: string, updatedFields: Partial<ServiceTypeItem>): Promise<void> => {
+    const dbFields: Record<string, string> = {};
+    if (updatedFields.name !== undefined) dbFields.name = updatedFields.name;
+    if (updatedFields.nameRu !== undefined) dbFields.name_ru = updatedFields.nameRu;
+    if (updatedFields.nameEn !== undefined) dbFields.name_en = updatedFields.nameEn;
+    if (Object.keys(dbFields).length === 0) return;
 
-    try {
-      const dbFields: any = {};
-      if (updatedFields.name !== undefined) dbFields.name = updatedFields.name;
-      if (updatedFields.nameRu !== undefined) dbFields.name_ru = updatedFields.nameRu;
-      if (updatedFields.nameEn !== undefined) dbFields.name_en = updatedFields.nameEn;
-      await adminApi('service_types', 'update', dbFields, id);
-    } catch (err) {
-      console.warn('Supabase service_types update note:', err);
-    }
+    const rows = await adminApi('service_types', 'update', dbFields, id);
+    if (!Array.isArray(rows) || rows.length === 0) throw new Error('Service type update returned no row');
+    const savedItem = mapServiceTypeRow(rows[0]);
+    setServiceTypes((current) => sortServiceTypes(current.map((item) => item.id === id ? savedItem : item)));
   };
 
-  const deleteServiceType = async (id: string) => {
-    const updated = serviceTypes.filter((s) => s.id !== id);
-    setServiceTypes(updated);
-    try {
-      localStorage.setItem('sanam_service_types', JSON.stringify(updated));
-    } catch (e) {}
-
-    try {
-      await adminApi('service_types', 'delete', undefined, id);
-    } catch (err) {
-      console.warn('Supabase service_types delete note:', err);
-    }
+  const deleteServiceType = async (id: string): Promise<void> => {
+    const rows = await adminApi('service_types', 'delete', undefined, id);
+    if (!Array.isArray(rows) || rows.length === 0) throw new Error('Service type delete returned no row');
+    setServiceTypes((current) => current.filter((item) => item.id !== id));
   };
 
   // ==================== PRODUCTS CRUD ====================
@@ -1035,7 +981,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {}
 
     try {
-      const dbFields: any = {};
+      const dbFields: Record<string, string | string[] | null> = {};
       if (updatedFields.name !== undefined) dbFields.name = updatedFields.name;
       if (updatedFields.category !== undefined) dbFields.category = updatedFields.category;
       if (updatedFields.desc !== undefined) dbFields.description = updatedFields.desc;
@@ -1099,7 +1045,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {}
 
     try {
-      const dbFields: any = {};
+      const dbFields: Record<string, string | string[] | null> = {};
       if (updatedFields.title !== undefined) dbFields.title = updatedFields.title;
       if (updatedFields.date !== undefined) dbFields.date = updatedFields.date;
       if (updatedFields.category !== undefined) dbFields.category = updatedFields.category;
@@ -1157,7 +1103,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {}
 
     try {
-      const dbFields: any = {};
+      const dbFields: Record<string, string | string[] | null> = {};
       if (updatedFields.name !== undefined) dbFields.name = updatedFields.name;
       if (updatedFields.role !== undefined) dbFields.role = updatedFields.role;
       if (updatedFields.imageUrl !== undefined) dbFields.image_url = updatedFields.imageUrl;

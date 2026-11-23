@@ -91,7 +91,7 @@ export const WhyUsStats: React.FC<WhyUsStatsProps> = ({ currentLang }) => {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {t.partnersList.map((partner: any, idx: number) => (
+              {t.partnersList.map((partner, idx) => (
                 <div
                   key={idx}
                   className="bg-white/5 border border-white/10 rounded-2xl p-6 sm:p-7 space-y-4 hover:bg-white/10 hover:border-[#FFC107]/50 transition-all duration-300 relative overflow-hidden group text-left flex flex-col justify-between shadow-lg"

@@ -113,7 +113,7 @@ export const Testimonials: React.FC<TestimonialsProps> = ({ currentLang }) => {
                 <p className={`text-xs sm:text-sm leading-relaxed italic font-medium ${
                   isDarkMode ? 'text-slate-300' : 'text-slate-700'
                 }`}>
-                  "{item.text}"
+                  &quot;{item.text}&quot;
                 </p>
               </div>
 

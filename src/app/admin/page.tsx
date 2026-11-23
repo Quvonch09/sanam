@@ -19,6 +19,14 @@ import {
   ChevronDown,
 } from '@/components/Icons';
 
+const getUnknownErrorMessage = (error: unknown): string => {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string') {
+    return error.message;
+  }
+  return '';
+};
+
 interface AdminDashboardProps {
   onLogout: () => void;
 }
@@ -99,6 +107,13 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [serviceName, setServiceName] = useState('');
   const [serviceNameRu, setServiceNameRu] = useState('');
   const [serviceNameEn, setServiceNameEn] = useState('');
+  const [isSavingService, setIsSavingService] = useState(false);
+  const [serviceSaveError, setServiceSaveError] = useState<string | null>(null);
+  const serviceSaveFailureMessage = currentLang === 'ru'
+    ? 'Не удалось сохранить тип заказа. Проверьте подключение и попробуйте ещё раз.'
+    : currentLang === 'en'
+      ? 'Could not save the order type. Check the connection and try again.'
+      : "Buyurtma turini saqlab bo'lmadi. Ulanishni tekshirib, qayta urinib ko'ring.";
 
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -368,29 +383,38 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
     setShowCategoryModal(false);
   };
 
-  const handleServiceSubmit = (e: React.FormEvent) => {
+  const handleServiceSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!serviceName.trim()) return;
+    if (!serviceName.trim() || isSavingService) return;
 
-    if (editingService) {
-      updateServiceType(editingService.id, {
-        name: serviceName.trim(),
-        nameRu: serviceNameRu.trim() || undefined,
-        nameEn: serviceNameEn.trim() || undefined,
-      });
-    } else {
-      addServiceType({
-        name: serviceName.trim(),
-        nameRu: serviceNameRu.trim() || undefined,
-        nameEn: serviceNameEn.trim() || undefined,
-      });
+    setIsSavingService(true);
+    setServiceSaveError(null);
+    try {
+      if (editingService) {
+        await updateServiceType(editingService.id, {
+          name: serviceName.trim(),
+          nameRu: serviceNameRu.trim() || undefined,
+          nameEn: serviceNameEn.trim() || undefined,
+        });
+      } else {
+        await addServiceType({
+          name: serviceName.trim(),
+          nameRu: serviceNameRu.trim() || undefined,
+          nameEn: serviceNameEn.trim() || undefined,
+        });
+      }
+      setEditingService(null);
+      setShowServiceModal(false);
+    } catch (error) {
+      console.warn('Service type save failed:', error);
+      setServiceSaveError(serviceSaveFailureMessage);
+    } finally {
+      setIsSavingService(false);
     }
-
-    setEditingService(null);
-    setShowServiceModal(false);
   };
 
   const openEditService = (srv: ServiceTypeItem) => {
+    setServiceSaveError(null);
     setEditingService(srv);
     setServiceName(srv.name);
     setServiceNameRu(srv.nameRu || '');
@@ -445,7 +469,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <button
                 key={item.id}
             onClick={() => {
-                setActiveTab(item.id as any);
+                setActiveTab(item.id as 'dashboard' | 'products' | 'categories' | 'services' | 'team' | 'news' | 'leads' | 'feedback');
                 setSidebarOpen(false);
               }}
                 className={`w-full text-left px-4 py-3.5 rounded-2xl text-[13px] tracking-tight font-semibold transition-all flex items-center justify-between ${
@@ -691,7 +715,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <div className={`border rounded-3xl p-6 space-y-4 ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-sm'}`}>
                 <div className="flex items-center gap-2">
                   <span className="text-base">🗂️</span>
-                  <h3 className={`text-sm font-extrabold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Kategoriyalar bo'yicha mahsulotlar</h3>
+                  <h3 className={`text-sm font-extrabold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Kategoriyalar bo&apos;yicha mahsulotlar</h3>
                 </div>
                 <div className="space-y-3">
                   {categories.map(cat => {
@@ -709,7 +733,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       </div>
                     );
                   })}
-                  {categories.length === 0 && <p className="text-xs text-slate-400">Kategoriyalar yo'q</p>}
+                  {categories.length === 0 && <p className="text-xs text-slate-400">Kategoriyalar yo&apos;q</p>}
                 </div>
               </div>
 
@@ -717,7 +741,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <div className={`border rounded-3xl p-6 space-y-4 ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200 shadow-sm'}`}>
                 <div className="flex items-center gap-2">
                   <span className="text-base">🔥</span>
-                  <h3 className={`text-sm font-extrabold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Ko'p so'ralgan mahsulotlar</h3>
+                  <h3 className={`text-sm font-extrabold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Ko&apos;p so&apos;ralgan mahsulotlar</h3>
                 </div>
                 <div className="space-y-2">
                   {(() => {
@@ -743,8 +767,8 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     )) : (
                       <div className="text-center py-6">
                         <p className="text-2xl mb-2">📊</p>
-                        <p className="text-xs text-slate-400">Hali so'rovlar yo'q</p>
-                        <p className="text-[10px] text-slate-500 mt-1">Buyurtma hisoblagich ishlatilganda bu yerda ko'rinadi</p>
+                        <p className="text-xs text-slate-400">Hali so&apos;rovlar yo&apos;q</p>
+                        <p className="text-[10px] text-slate-500 mt-1">Buyurtma hisoblagich ishlatilganda bu yerda ko&apos;rinadi</p>
                       </div>
                     );
                   })()}
@@ -760,9 +784,9 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-base">📋</span>
-                    <h3 className={`text-sm font-extrabold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>So'nggi arizalar</h3>
+                    <h3 className={`text-sm font-extrabold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>So&apos;nggi arizalar</h3>
                   </div>
-                  <button onClick={() => setActiveTab('leads')} className="text-[10px] text-[#FFC107] font-bold hover:underline">Barchasini ko'rish →</button>
+                  <button onClick={() => setActiveTab('leads')} className="text-[10px] text-[#FFC107] font-bold hover:underline">Barchasini ko&apos;rish →</button>
                 </div>
                 <div className="space-y-2">
                   {leads.slice(0, 4).map(lead => (
@@ -778,7 +802,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       }`}>{lead.status === 'new' ? 'Yangi' : lead.status === 'contacted' ? "Bog'landi" : 'Bajarildi'}</span>
                     </div>
                   ))}
-                  {leads.length === 0 && <p className="text-xs text-slate-400 text-center py-4">Arizalar yo'q</p>}
+                  {leads.length === 0 && <p className="text-xs text-slate-400 text-center py-4">Arizalar yo&apos;q</p>}
                 </div>
               </div>
 
@@ -789,7 +813,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     <span className="text-base">⭐</span>
                     <h3 className={`text-sm font-extrabold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Mijozlar baholari</h3>
                   </div>
-                  <button onClick={() => setActiveTab('feedback')} className="text-[10px] text-[#FFC107] font-bold hover:underline">Barchasini ko'rish →</button>
+                  <button onClick={() => setActiveTab('feedback')} className="text-[10px] text-[#FFC107] font-bold hover:underline">Barchasini ko&apos;rish →</button>
                 </div>
                 <div className="space-y-2">
                   {[5, 4, 3, 2, 1].map(star => {
@@ -811,7 +835,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   <span className={`text-2xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                     {feedbacks.length > 0 ? (feedbacks.reduce((s, f) => s + f.rating, 0) / feedbacks.length).toFixed(1) : '—'}
                   </span>
-                  <span className="text-xs text-slate-400 ml-1">o'rtacha / {feedbacks.length} ta fikr</span>
+                  <span className="text-xs text-slate-400 ml-1">o&apos;rtacha / {feedbacks.length} ta fikr</span>
                 </div>
               </div>
             </div>
@@ -975,6 +999,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
               <button
                 onClick={() => {
+                  setServiceSaveError(null);
                   setEditingService(null);
                   setServiceName('');
                   setServiceNameRu('');
@@ -986,6 +1011,10 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 <span>📋 {tAdmin.actions.addServiceType}</span>
               </button>
             </div>
+
+            {serviceSaveError && (
+              <p role="alert" className="text-xs text-red-500">{serviceSaveError}</p>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {serviceTypes.map((srv, idx) => (
@@ -1021,7 +1050,15 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       <Edit className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() => deleteServiceType(srv.id)}
+                      onClick={async () => {
+                        setServiceSaveError(null);
+                        try {
+                          await deleteServiceType(srv.id);
+                        } catch (error) {
+                          console.warn('Service type delete failed:', error);
+                          setServiceSaveError(serviceSaveFailureMessage);
+                        }
+                      }}
                       className="p-2 bg-red-500/10 text-red-400 rounded-xl hover:bg-red-500/20 transition-colors"
                       title={tAdmin.actions.delete}
                     >
@@ -1153,19 +1190,19 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
           <div className="space-y-8 animate-in fade-in duration-200">
             <div>
               <h2 className={`text-2xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{tAdmin.tabs.leads}</h2>
-              <p className="text-xs text-slate-400">Formadan kelgan arizalar va buyurtma hisoblagich so'rovlari</p>
+              <p className="text-xs text-slate-400">Formadan kelgan arizalar va buyurtma hisoblagich so&apos;rovlari</p>
             </div>
 
             {/* Contact Form Leads */}
             <div className="space-y-4">
               <h3 className={`text-sm font-extrabold flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
                 <span className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs">📩</span>
-                Bog'lanish Arizalari ({leads.length} ta)
+                Bog&apos;lanish Arizalari ({leads.length} ta)
               </h3>
               {leads.length === 0 ? (
                 <div className={`border rounded-3xl p-10 text-center ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
                   <p className="text-3xl mb-2">📭</p>
-                  <p className="text-sm text-slate-400">Hali arizalar yo'q</p>
+                  <p className="text-sm text-slate-400">Hali arizalar yo&apos;q</p>
                 </div>
               ) : (
                 <div className={`overflow-x-auto border rounded-2xl ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
@@ -1199,13 +1236,13 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                             </span>
                           </td>
                           <td className="py-3 px-4 max-w-[200px] truncate" title={lead.message || ''}>
-                            {lead.message || <span className="text-slate-500 font-normal italic">- bo'sh -</span>}
+                            {lead.message || <span className="text-slate-500 font-normal italic">- bo&apos;sh -</span>}
                           </td>
                           <td className="py-3 px-4 text-slate-400 font-mono text-[10px]">{lead.date}</td>
                           <td className="py-3 px-4">
                             <select
                               value={lead.status}
-                              onChange={e => updateLeadStatus(lead.id, e.target.value as any)}
+                              onChange={e => updateLeadStatus(lead.id, e.target.value as 'new' | 'contacted' | 'completed')}
                               className={`text-[10px] font-bold px-2 py-1 rounded-lg border cursor-pointer outline-none ${
                                 lead.status === 'new' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' :
                                 lead.status === 'contacted' ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' :
@@ -1213,7 +1250,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                               }`}
                             >
                               <option value="new">🟢 Yangi</option>
-                              <option value="contacted">🔵 Bog'landi</option>
+                              <option value="contacted">🔵 Bog&apos;landi</option>
                               <option value="completed">✅ Bajarildi</option>
                             </select>
                           </td>
@@ -1245,12 +1282,12 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
             <div className="space-y-4">
               <h3 className={`text-sm font-extrabold flex items-center gap-2 ${isDarkMode ? 'text-white' : 'text-slate-800'}`}>
                 <span className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs">🧮</span>
-                Smeta So'rovlari ({calcInquiries.length} ta)
+                Smeta So&apos;rovlari ({calcInquiries.length} ta)
               </h3>
               {calcInquiries.length === 0 ? (
                 <div className={`border rounded-3xl p-10 text-center ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
                   <p className="text-3xl mb-2">🧮</p>
-                  <p className="text-sm text-slate-400">Hali smeta so'rovlari yo'q</p>
+                  <p className="text-sm text-slate-400">Hali smeta so&apos;rovlari yo&apos;q</p>
                 </div>
               ) : (
                 <div className={`overflow-x-auto border rounded-2xl ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
@@ -1286,7 +1323,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                           <td className="py-3 px-4">
                             <select
                               value={calc.status}
-                              onChange={e => updateCalcStatus(calc.id, e.target.value as any)}
+                              onChange={e => updateCalcStatus(calc.id, e.target.value as 'new' | 'contacted' | 'completed')}
                               className={`text-[10px] font-bold px-2 py-1 rounded-lg border cursor-pointer outline-none ${
                                 calc.status === 'new' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' :
                                 calc.status === 'contacted' ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' :
@@ -1294,7 +1331,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                               }`}
                             >
                               <option value="new">🟢 Yangi</option>
-                              <option value="contacted">🔵 Bog'landi</option>
+                              <option value="contacted">🔵 Bog&apos;landi</option>
                               <option value="completed">✅ Bajarildi</option>
                             </select>
                           </td>
@@ -1329,7 +1366,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
           <div className="space-y-6 animate-in fade-in duration-200">
             <div>
               <h2 className={`text-2xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{tAdmin.tabs.feedback}</h2>
-              <p className="text-xs text-slate-400">Mijozlardan kelgan izohlar — tasdiqlang yoki o'chiring</p>
+              <p className="text-xs text-slate-400">Mijozlardan kelgan izohlar — tasdiqlang yoki o&apos;chiring</p>
             </div>
 
             {/* Feedback Stats Row */}
@@ -1348,7 +1385,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
             {feedbacks.length === 0 ? (
               <div className={`border rounded-3xl p-10 text-center ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
                 <p className="text-3xl mb-2">💬</p>
-                <p className="text-sm text-slate-400">Hali mijozlar fikri yo'q</p>
+                <p className="text-sm text-slate-400">Hali mijozlar fikri yo&apos;q</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -1510,7 +1547,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         try {
                           const url = await uploadFileToSupabase(file, 'products');
                           uploadedUrls.push(url);
-                        } catch (err: any) {
+                        } catch (err: unknown) {
                           console.error('Product image upload error:', err);
                           if (file.size < 500 * 1024) {
                             try {
@@ -1527,13 +1564,13 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                                   : "Storage bucket 'sanam' not found. Image saved as Base64."
                               );
                             } catch (readErr) {
-                              setUploadError(err.message || 'Upload failed');
+                              setUploadError(getUnknownErrorMessage(readErr) || 'Upload failed');
                             }
                           } else {
                             setUploadError(
                               currentLang === 'uz'
-                                ? `Fayl yuklashda xatolik: ${err.message || 'Noma\'lum xato'}. Videolar va katta rasmlar uchun Supabase Storage bucket ('sanam') sozlanishi shart.`
-                                : `Upload error: ${err.message || 'Unknown error'}. Supabase Storage bucket ('sanam') must be configured for videos and large images.`
+                                ? `Fayl yuklashda xatolik: ${getUnknownErrorMessage(err) || 'Noma\'lum xato'}. Videolar va katta rasmlar uchun Supabase Storage bucket ('sanam') sozlanishi shart.`
+                                : `Upload error: ${getUnknownErrorMessage(err) || 'Unknown error'}. Supabase Storage bucket ('sanam') must be configured for videos and large images.`
                             );
                           }
                         }
@@ -1650,9 +1687,15 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 />
               </div>
 
+              {serviceSaveError && (
+                <p role="alert" className="text-xs text-red-500">{serviceSaveError}</p>
+              )}
+
               <div className="pt-2 flex gap-3">
-                <button type="submit" className="flex-1 py-3 bg-[#FFC107] text-[#1E1A5B] font-extrabold text-xs rounded-xl shadow">{tAdmin.actions.save}</button>
-                <button type="button" onClick={() => setShowServiceModal(false)} className="px-5 py-3 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl">{tAdmin.actions.close}</button>
+                <button type="submit" disabled={isSavingService} className="flex-1 py-3 bg-[#FFC107] text-[#1E1A5B] font-extrabold text-xs rounded-xl shadow disabled:opacity-50">
+                  {isSavingService ? (currentLang === 'ru' ? 'Сохранение…' : currentLang === 'en' ? 'Saving…' : 'Saqlanmoqda…') : tAdmin.actions.save}
+                </button>
+                <button type="button" disabled={isSavingService} onClick={() => setShowServiceModal(false)} className="px-5 py-3 bg-slate-800 text-slate-300 text-xs font-bold rounded-xl disabled:opacity-50">{tAdmin.actions.close}</button>
               </div>
             </form>
           </div>
@@ -1698,7 +1741,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       try {
                         const url = await uploadFileToSupabase(file, 'team');
                         setTeamImageBase64(url);
-                      } catch (err: any) {
+                      } catch (err: unknown) {
                         console.error('Team photo upload error:', err);
                         if (file.size < 500 * 1024) {
                           try {
@@ -1715,13 +1758,13 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                                 : "Storage bucket 'sanam' not found. Image saved as Base64."
                             );
                           } catch (readErr) {
-                            setUploadError(err.message || 'Upload failed');
+                            setUploadError(getUnknownErrorMessage(readErr) || 'Upload failed');
                           }
                         } else {
                           setUploadError(
                             currentLang === 'uz'
-                              ? `Fayl yuklashda xatolik: ${err.message || 'Noma\'lum xato'}. Videolar va katta rasmlar uchun Supabase Storage bucket ('sanam') sozlanishi shart.`
-                              : `Upload error: ${err.message || 'Unknown error'}. Supabase Storage bucket ('sanam') must be configured for videos and large images.`
+                              ? `Fayl yuklashda xatolik: ${getUnknownErrorMessage(err) || 'Noma\'lum xato'}. Videolar va katta rasmlar uchun Supabase Storage bucket ('sanam') sozlanishi shart.`
+                              : `Upload error: ${getUnknownErrorMessage(err) || 'Unknown error'}. Supabase Storage bucket ('sanam') must be configured for videos and large images.`
                           );
                         }
                       } finally {
@@ -1819,7 +1862,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         try {
                           const url = await uploadFileToSupabase(file, 'news');
                           setNewsImageBase64(url);
-                        } catch (err: any) {
+                        } catch (err: unknown) {
                           console.error('News image upload error:', err);
                           if (file.size < 500 * 1024) {
                             try {
@@ -1836,13 +1879,13 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                                   : "Storage bucket 'sanam' not found. Image saved as Base64."
                               );
                             } catch (readErr) {
-                              setUploadError(err.message || 'Upload failed');
+                              setUploadError(getUnknownErrorMessage(readErr) || 'Upload failed');
                             }
                           } else {
                             setUploadError(
                               currentLang === 'uz'
-                                ? `Fayl yuklashda xatolik: ${err.message || 'Noma\'lum xato'}. Videolar va katta rasmlar uchun Supabase Storage bucket ('sanam') sozlanishi shart.`
-                                : `Upload error: ${err.message || 'Unknown error'}. Supabase Storage bucket ('sanam') must be configured for videos and large images.`
+                                ? `Fayl yuklashda xatolik: ${getUnknownErrorMessage(err) || 'Noma\'lum xato'}. Videolar va katta rasmlar uchun Supabase Storage bucket ('sanam') sozlanishi shart.`
+                                : `Upload error: ${getUnknownErrorMessage(err) || 'Unknown error'}. Supabase Storage bucket ('sanam') must be configured for videos and large images.`
                             );
                           }
                         } finally {
@@ -1893,12 +1936,12 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         try {
                           const url = await uploadFileToSupabase(file, 'news');
                           setNewsVideoBase64(url);
-                        } catch (err: any) {
+                        } catch (err: unknown) {
                           console.error('News video upload error:', err);
                           setUploadError(
                             currentLang === 'uz'
-                              ? `Video yuklashda xatolik: ${err.message || 'Noma\'lum xato'}. Videolar uchun Supabase Storage bucket ('sanam') sozlanishi shart.`
-                              : `Video upload error: ${err.message || 'Unknown error'}. Supabase Storage bucket ('sanam') must be configured for videos.`
+                              ? `Video yuklashda xatolik: ${getUnknownErrorMessage(err) || 'Noma\'lum xato'}. Videolar uchun Supabase Storage bucket ('sanam') sozlanishi shart.`
+                              : `Video upload error: ${getUnknownErrorMessage(err) || 'Unknown error'}. Supabase Storage bucket ('sanam') must be configured for videos.`
                           );
                         } finally {
                           setIsUploading(false);
@@ -1941,9 +1984,9 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
               ⚠️
             </div>
             <div className="space-y-2">
-              <h4 className="text-base font-black">O'chirishni tasdiqlaysizmi?</h4>
+              <h4 className="text-base font-black">O&apos;chirishni tasdiqlaysizmi?</h4>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Siz haqiqatan ham <strong className={isDarkMode ? 'text-white' : 'text-slate-900'}>{deleteConfirm.title}</strong> ni o'chirmoqchimisiz? Ushbu amalni ortga qaytarib bo'lmaydi.
+                Siz haqiqatan ham <strong className={isDarkMode ? 'text-white' : 'text-slate-900'}>{deleteConfirm.title}</strong> ni o&apos;chirmoqchimisiz? Ushbu amalni ortga qaytarib bo&apos;lmaydi.
               </p>
             </div>
             <div className="flex gap-3">
@@ -1968,7 +2011,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 }}
                 className="flex-1 py-2.5 text-xs font-bold rounded-xl bg-red-500 hover:bg-red-600 text-white transition-colors shadow-lg shadow-red-500/10"
               >
-                O'chirish
+                O&apos;chirish
               </button>
             </div>
           </div>
@@ -1996,11 +2039,12 @@ export default function AdminPage() {
       // Old localStorage flags are never accepted as authentication.
       localStorage.removeItem('sanam_admin_auth');
       const storedLang = localStorage.getItem('sanam_lang') as Language;
-      if (storedLang && ['uz', 'ru', 'en'].includes(storedLang)) {
-        setLoginLang(storedLang);
-      }
+      const validStoredLang = storedLang && ['uz', 'ru', 'en'].includes(storedLang) ? storedLang : null;
       fetch('/api/admin/session', { credentials: 'same-origin', cache: 'no-store' })
-        .then((response) => setAuthState(response.ok ? 'authenticated' : 'unauthenticated'))
+        .then((response) => {
+          if (validStoredLang) setLoginLang(validStoredLang);
+          setAuthState(response.ok ? 'authenticated' : 'unauthenticated');
+        })
         .catch(() => setAuthState('unauthenticated'));
     }
   }, []);

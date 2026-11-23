@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import { SanamLogo } from './SanamLogo';
 import { Language, translations } from '../data/translations';
@@ -21,18 +22,13 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenContact,
 }) => {
   const { isDarkMode, toggleTheme } = useApp();
+  const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
-  const [isSubPage, setIsSubPage] = useState(false);
+  const isSubPage = pathname !== '/' && pathname !== null;
 
   const t = translations[currentLang].nav;
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setIsSubPage(window.location.pathname !== '/' && window.location.pathname !== '');
-    }
-  }, []);
 
   useEffect(() => {
     const handleScroll = () => {

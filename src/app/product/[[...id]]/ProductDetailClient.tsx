@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useSyncExternalStore } from 'react';
+import Link from 'next/link';
 import { AppProvider, useApp } from '@/context/AppContext';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -11,28 +12,21 @@ import { translations } from '@/data/translations';
 import { ArrowLeft, Copy, Check, Sparkles, Share2 } from 'lucide-react';
 import { getProductImages } from '@/utils/productImages';
 
+const getProductSlug = () => {
+  if (typeof window === 'undefined') return null;
+  const pathParts = window.location.pathname.split('/');
+  const lastPart = pathParts[pathParts.length - 1];
+  const searchParams = new URLSearchParams(window.location.search);
+  return searchParams.get('id') || searchParams.get('slug') ||
+    (lastPart && lastPart !== 'product' ? decodeURIComponent(lastPart) : null);
+};
+const subscribeToLocation = () => () => {};
+
 function ProductDetailContent() {
   const { products, isDarkMode, currentLang, setLanguage } = useApp();
-  const [slug, setSlug] = useState<string | null>(null);
+  const slug = useSyncExternalStore(subscribeToLocation, getProductSlug, () => null);
   const [copied, setCopied] = useState(false);
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
-
-  // Client side routing check
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const pathParts = window.location.pathname.split('/');
-      const lastPart = pathParts[pathParts.length - 1];
-      
-      const searchParams = new URLSearchParams(window.location.search);
-      const queryId = searchParams.get('id') || searchParams.get('slug');
-
-      if (queryId) {
-        setSlug(queryId);
-      } else if (lastPart && lastPart !== 'product') {
-        setSlug(decodeURIComponent(lastPart));
-      }
-    }
-  }, []);
 
   const product = products.find(
     (p) => p.id === slug || slugify(p.name) === slug || slugify(p.model) === slug
@@ -78,7 +72,7 @@ function ProductDetailContent() {
   };
 
   // Safe translations lookup with fallbacks
-  const tDetail = (translations[currentLang] as any).productDetail || {
+  const tDetail = translations[currentLang].admin.productDetail || {
     backToHome: currentLang === 'ru' ? 'Вернуться на главную' : currentLang === 'en' ? 'Back to Homepage' : 'Bosh sahifaga qaytish',
     notFound: currentLang === 'ru' ? 'Товар не найден' : currentLang === 'en' ? 'Product Not Found' : 'Mahsulot topilmadi',
     notFoundDesc: currentLang === 'ru' ? 'К сожалению, запрашиваемый товар не существует.' : currentLang === 'en' ? 'Sorry, the product you are looking for does not exist.' : 'Kechirasiz, siz qidirayotgan mahsulot mavjud emas.',
@@ -118,13 +112,13 @@ function ProductDetailContent() {
             </div>
             <h1 className="text-3xl font-black">{tDetail.notFound}</h1>
             <p className="text-slate-400 text-sm">{tDetail.notFoundDesc}</p>
-            <a
+            <Link
               href="/"
               className="inline-flex items-center gap-2 px-6 py-3 bg-[#FFC107] hover:bg-amber-400 text-[#1E1A5B] font-extrabold text-sm rounded-xl transition-all shadow-lg"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>{tDetail.backToHome}</span>
-            </a>
+            </Link>
           </div>
         </main>
         <Footer currentLang={currentLang} />
@@ -149,7 +143,7 @@ function ProductDetailContent() {
       <main className="flex-grow pt-28 pb-16 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto w-full">
         {/* Back Button */}
         <div className="mb-6">
-          <a
+          <Link
             href="/"
             className={`inline-flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-colors border ${
               isDarkMode 
@@ -159,7 +153,7 @@ function ProductDetailContent() {
           >
             <ArrowLeft className="w-4 h-4" />
             <span>{tDetail.backToHome}</span>
-          </a>
+          </Link>
         </div>
 
         {/* Product Card Container */}

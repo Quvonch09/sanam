@@ -58,12 +58,12 @@ export async function POST(request: NextRequest) {
   }
   try {
     const supabase = getSupabaseAdmin();
-    let query: any;
-    if (operation === 'delete') query = supabase.from(table).delete().eq('id', input.id as string | number);
-    else if (operation === 'insert') query = supabase.from(table).insert(input.data as Record<string, unknown>);
-    else if (operation === 'upsert') query = supabase.from(table).upsert(input.data as Record<string, unknown>);
-    else query = supabase.from(table).update(input.data as Record<string, unknown>).eq('id', input.id as string | number);
-    const { data, error } = await query.select();
+    let result: { data: unknown; error: { message: string } | null };
+    if (operation === 'delete') result = await supabase.from(table).delete().eq('id', input.id as string | number).select();
+    else if (operation === 'insert') result = await supabase.from(table).insert(input.data as Record<string, unknown>).select();
+    else if (operation === 'upsert') result = await supabase.from(table).upsert(input.data as Record<string, unknown>).select();
+    else result = await supabase.from(table).update(input.data as Record<string, unknown>).eq('id', input.id as string | number).select();
+    const { data, error } = result;
     if (error) return jsonError('Unable to save data', 400);
     return NextResponse.json(data ?? [], { headers: { 'Cache-Control': 'no-store' } });
   } catch { return jsonError('Unable to save data', 500); }
