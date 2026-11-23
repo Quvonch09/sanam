@@ -1989,6 +1989,10 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      if (window.location.hostname === 'sanamfactory.uz') {
+        window.location.replace(`https://www.sanamfactory.uz${window.location.pathname}${window.location.search}${window.location.hash}`);
+        return;
+      }
       // Old localStorage flags are never accepted as authentication.
       localStorage.removeItem('sanam_admin_auth');
       const storedLang = localStorage.getItem('sanam_lang') as Language;
