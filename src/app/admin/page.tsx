@@ -1979,49 +1979,71 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
   );
 }
 
-// Protected Admin Wrapper with Persistent Login State & Logout
+// Admin access is authenticated by the same-origin server session API.
 export default function AdminPage() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authState, setAuthState] = useState<'checking' | 'authenticated' | 'unauthenticated'>('checking');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loginLang, setLoginLang] = useState<Language>('uz');
 
-  // Check persistent login session on mount (refresh check)
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const storedAuth = localStorage.getItem('sanam_admin_auth');
-      if (storedAuth === 'true') {
-        setIsAuthenticated(true);
-      }
+      // Old localStorage flags are never accepted as authentication.
+      localStorage.removeItem('sanam_admin_auth');
       const storedLang = localStorage.getItem('sanam_lang') as Language;
       if (storedLang && ['uz', 'ru', 'en'].includes(storedLang)) {
         setLoginLang(storedLang);
       }
+      fetch('/api/admin/session', { credentials: 'same-origin', cache: 'no-store' })
+        .then((response) => setAuthState(response.ok ? 'authenticated' : 'unauthenticated'))
+        .catch(() => setAuthState('unauthenticated'));
     }
   }, []);
 
   const tLogin = translations[loginLang].admin.login;
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (username === 'admin' && password === 'sanam2026') {
-      setIsAuthenticated(true);
-      localStorage.setItem('sanam_admin_auth', 'true');
-      setError('');
-    } else {
+    setError('');
+    try {
+      const response = await fetch('/api/admin/session', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+      setPassword('');
+      if (response.ok) {
+        setAuthState('authenticated');
+      } else {
+        setError(tLogin.errorMsg);
+      }
+    } catch {
       setError(tLogin.errorMsg);
     }
   };
 
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    localStorage.removeItem('sanam_admin_auth');
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/admin/session', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'logout' }),
+      });
+    } finally {
+      setAuthState('unauthenticated');
+    }
     setUsername('');
     setPassword('');
   };
 
-  if (!isAuthenticated) {
+  if (authState === 'checking') {
+    return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-300 text-sm">Tekshirilmoqda...</div>;
+  }
+
+  if (authState !== 'authenticated') {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 font-sans">
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full space-y-6 shadow-2xl">
@@ -2049,7 +2071,7 @@ export default function AdminPage() {
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="admin"
+                placeholder="sanam"
                 className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:ring-2 focus:ring-[#FFC107] outline-none"
               />
             </div>

@@ -5,6 +5,20 @@ import { Language } from '../data/translations';
 import { CategoryItem, ProductItem, initialCategories, initialProducts } from '@/data/products';
 import { supabase } from '@/lib/supabase';
 
+const adminApi = async (table: string, operation?: string, data?: unknown, id?: string) => {
+  if (!operation) {
+    const response = await fetch(`/api/admin/data?table=${encodeURIComponent(table)}`, { credentials: 'same-origin' });
+    if (!response.ok) throw new Error(`Admin data request failed (${response.status})`);
+    return response.json();
+  }
+  const response = await fetch('/api/admin/data', {
+    method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ table, operation, ...(id ? { id } : {}), ...(data !== undefined ? { data } : {}) }),
+  });
+  if (!response.ok) throw new Error(`Admin data mutation failed (${response.status})`);
+  return response.json().catch(() => null);
+};
+
 export type { CategoryItem, ProductItem };
 
 export interface NewsItem {
@@ -357,7 +371,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         loadServiceTypes(),
         loadNews(),
         loadTeam(),
-        loadFeedbacks(),
+        ...(typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')
+          ? [loadLeads(), loadCalcInquiries(), loadAdminFeedbacks()]
+          : [loadFeedbacks()]),
       ]);
     } catch (e) {
       console.error('Error loading data from Supabase:', e);
@@ -648,9 +664,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const loadAdminFeedbacks = async () => {
+    try {
+      const data = await adminApi('feedbacks');
+      if (Array.isArray(data)) {
+        const mapped = data.map(mapFeedback);
+        setFeedbacks(mapped);
+        try { localStorage.setItem('sanam_feedbacks', JSON.stringify(mapped)); } catch (e) {}
+      }
+    } catch (e) { console.error('loadAdminFeedbacks exception:', e); }
+  };
+
   const loadLeads = async () => {
     try {
-      const { data, error } = await supabase.from('leads').select('*').order('created_at', { ascending: false });
+      const data = await adminApi('leads');
+      const error = !Array.isArray(data);
       
       let localList: LeadItem[] = [];
       try {
@@ -680,7 +708,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const loadCalcInquiries = async () => {
     try {
-      const { data, error } = await supabase.from('calc_inquiries').select('*').order('created_at', { ascending: false });
+      const data = await adminApi('calc_inquiries');
+      const error = !Array.isArray(data);
       
       let localList: CalcInquiry[] = [];
       try {
@@ -738,7 +767,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           price: p.price,
           badge: p.badge ?? '',
         }));
-        await supabase.from('products').upsert(rows);
+        await Promise.all(rows.map((row) => adminApi('products', 'upsert', row)));
         totalPushed += rows.length;
       }
 
@@ -759,7 +788,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           key: c.key,
           label: c.label,
         }));
-        await supabase.from('categories').upsert(rows);
+        await Promise.all(rows.map((row) => adminApi('categories', 'upsert', row)));
         totalPushed += rows.length;
       }
 
@@ -781,7 +810,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           name_ru: s.nameRu || s.name,
           name_en: s.nameEn || s.name,
         }));
-        await supabase.from('service_types').upsert(rows);
+        await Promise.all(rows.map((row) => adminApi('service_types', 'upsert', row)));
         totalPushed += rows.length;
       }
 
@@ -807,7 +836,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           image_url: n.imageUrl ?? null,
           video_url: n.videoUrl ?? null,
         }));
-        await supabase.from('news').upsert(rows);
+        await Promise.all(rows.map((row) => adminApi('news', 'upsert', row)));
         totalPushed += rows.length;
       }
 
@@ -830,7 +859,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           image_url: t.imageUrl ?? null,
           phone: t.phone ?? null,
         }));
-        await supabase.from('team_members').upsert(rows);
+        await Promise.all(rows.map((row) => adminApi('team_members', 'upsert', row)));
         totalPushed += rows.length;
       }
 
@@ -876,7 +905,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {}
 
     try {
-      await supabase.from('categories').insert({
+      await adminApi('categories', 'insert', {
         id: newItem.id,
         key: newItem.key,
         label: newItem.label,
@@ -897,7 +926,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const dbFields: any = {};
       if (updatedFields.key !== undefined) dbFields.key = updatedFields.key;
       if (updatedFields.label !== undefined) dbFields.label = updatedFields.label;
-      await supabase.from('categories').update(dbFields).eq('id', id);
+      await adminApi('categories', 'update', dbFields, id);
     } catch (err) {
       console.warn('Supabase categories update note:', err);
     }
@@ -911,7 +940,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {}
 
     try {
-      await supabase.from('categories').delete().eq('id', id);
+      await adminApi('categories', 'delete', undefined, id);
     } catch (err) {
       console.warn('Supabase categories delete note:', err);
     }
@@ -927,7 +956,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {}
 
     try {
-      await supabase.from('service_types').insert({
+      await adminApi('service_types', 'insert', {
         id: newItem.id,
         name: newItem.name,
         name_ru: newItem.nameRu || newItem.name,
@@ -950,7 +979,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (updatedFields.name !== undefined) dbFields.name = updatedFields.name;
       if (updatedFields.nameRu !== undefined) dbFields.name_ru = updatedFields.nameRu;
       if (updatedFields.nameEn !== undefined) dbFields.name_en = updatedFields.nameEn;
-      await supabase.from('service_types').update(dbFields).eq('id', id);
+      await adminApi('service_types', 'update', dbFields, id);
     } catch (err) {
       console.warn('Supabase service_types update note:', err);
     }
@@ -964,7 +993,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {}
 
     try {
-      await supabase.from('service_types').delete().eq('id', id);
+      await adminApi('service_types', 'delete', undefined, id);
     } catch (err) {
       console.warn('Supabase service_types delete note:', err);
     }
@@ -980,7 +1009,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {}
 
     try {
-      await supabase.from('products').insert({
+      await adminApi('products', 'insert', {
         id: newItem.id,
         name: newItem.name,
         category: newItem.category,
@@ -1017,7 +1046,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (updatedFields.material !== undefined) dbFields.material = updatedFields.material;
       if (updatedFields.price !== undefined) dbFields.price = updatedFields.price;
       if (updatedFields.badge !== undefined) dbFields.badge = updatedFields.badge;
-      await supabase.from('products').update(dbFields).eq('id', id);
+      await adminApi('products', 'update', dbFields, id);
     } catch (err) {
       console.warn('Supabase products update note:', err);
     }
@@ -1031,7 +1060,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {}
 
     try {
-      await supabase.from('products').delete().eq('id', id);
+      await adminApi('products', 'delete', undefined, id);
     } catch (err) {
       console.warn('Supabase products delete note:', err);
     }
@@ -1047,7 +1076,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {}
 
     try {
-      await supabase.from('news').insert({
+      await adminApi('news', 'insert', {
         id: newItem.id,
         title: newItem.title,
         date: newItem.date,
@@ -1078,7 +1107,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (updatedFields.content !== undefined) dbFields.content = updatedFields.content;
       if (updatedFields.imageUrl !== undefined) dbFields.image_url = updatedFields.imageUrl;
       if (updatedFields.videoUrl !== undefined) dbFields.video_url = updatedFields.videoUrl;
-      await supabase.from('news').update(dbFields).eq('id', id);
+      await adminApi('news', 'update', dbFields, id);
     } catch (err) {
       console.warn('Supabase news update note:', err);
     }
@@ -1092,7 +1121,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {}
 
     try {
-      await supabase.from('news').delete().eq('id', id);
+      await adminApi('news', 'delete', undefined, id);
     } catch (err) {
       console.warn('Supabase news delete note:', err);
     }
@@ -1108,7 +1137,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {}
 
     try {
-      await supabase.from('team_members').insert({
+      await adminApi('team_members', 'insert', {
         id: newItem.id,
         name: newItem.name,
         role: newItem.role,
@@ -1133,7 +1162,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (updatedFields.role !== undefined) dbFields.role = updatedFields.role;
       if (updatedFields.imageUrl !== undefined) dbFields.image_url = updatedFields.imageUrl;
       if (updatedFields.phone !== undefined) dbFields.phone = updatedFields.phone;
-      await supabase.from('team_members').update(dbFields).eq('id', id);
+      await adminApi('team_members', 'update', dbFields, id);
     } catch (err) {
       console.warn('Supabase team update note:', err);
     }
@@ -1147,7 +1176,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {}
 
     try {
-      await supabase.from('team_members').delete().eq('id', id);
+      await adminApi('team_members', 'delete', undefined, id);
     } catch (err) {
       console.warn('Supabase team delete note:', err);
     }
@@ -1220,7 +1249,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {}
 
     try {
-      await supabase.from('leads').update({ status }).eq('id', id);
+      await adminApi('leads', 'update', { status }, id);
     } catch (err) {
       console.warn('Supabase leads status note:', err);
     }
@@ -1234,7 +1263,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {}
 
     try {
-      await supabase.from('calc_inquiries').update({ status }).eq('id', id);
+      await adminApi('calc_inquiries', 'update', { status }, id);
     } catch (err) {
       console.warn('Supabase calc status note:', err);
     }
@@ -1249,7 +1278,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {}
 
     try {
-      await supabase.from('leads').delete().eq('id', id);
+      await adminApi('leads', 'delete', undefined, id);
     } catch (err) {
       console.warn('Supabase leads delete note:', err);
     }
@@ -1264,7 +1293,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {}
 
     try {
-      await supabase.from('calc_inquiries').delete().eq('id', id);
+      await adminApi('calc_inquiries', 'delete', undefined, id);
     } catch (err) {
       console.warn('Supabase calc delete note:', err);
     }
@@ -1309,7 +1338,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {}
 
     try {
-      await supabase.from('feedbacks').update({ approved: newApproved }).eq('id', id);
+      await adminApi('feedbacks', 'update', { approved: newApproved }, id);
     } catch (err) {
       console.warn('Supabase feedbacks approve note:', err);
     }
@@ -1323,7 +1352,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {}
 
     try {
-      await supabase.from('feedbacks').delete().eq('id', id);
+      await adminApi('feedbacks', 'delete', undefined, id);
     } catch (err) {
       console.warn('Supabase feedbacks delete note:', err);
     }
