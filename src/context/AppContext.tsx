@@ -338,24 +338,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const parsed = JSON.parse(storedFeedbacks);
         if (Array.isArray(parsed) && parsed.length > 0) setFeedbacks(parsed);
       }
-
-      const storedLeads = localStorage.getItem('sanam_leads');
-      if (storedLeads) {
-        const parsed = JSON.parse(storedLeads);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setLeads(parsed);
-          setLeadsCount(parsed.length);
-        }
-      }
-
-      const storedCalc = localStorage.getItem('sanam_calc_inquiries');
-      if (storedCalc) {
-        const parsed = JSON.parse(storedCalc);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setCalcInquiries(parsed);
-          setCalcCount(parsed.length);
-        }
-      }
     } catch (e) {
       console.error('LocalStorage load cache error:', e);
     }
@@ -376,8 +358,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         loadNews(),
         loadTeam(),
         loadFeedbacks(),
-        loadLeads(),
-        loadCalcInquiries(),
       ]);
     } catch (e) {
       console.error('Error loading data from Supabase:', e);
@@ -589,7 +569,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const loadTeam = async () => {
     try {
-      const { data, error } = await supabase.from('team_members').select('*');
+      const { data, error } = await supabase.from('team_members').select('id, name, role, image_url');
       
       let localList: TeamMember[] = [];
       try {
@@ -639,7 +619,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const loadFeedbacks = async () => {
     try {
-      const { data, error } = await supabase.from('feedbacks').select('*');
+      const { data, error } = await supabase.from('feedbacks').select('*').eq('approved', true);
       
       let localList: FeedbackItem[] = [];
       try {

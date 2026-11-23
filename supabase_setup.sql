@@ -92,14 +92,48 @@ ALTER TABLE feedbacks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE leads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE calc_inquiries ENABLE ROW LEVEL SECURITY;
 
--- Allow all operations (public access for admin panel)
-CREATE POLICY "Allow all" ON products FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all" ON categories FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all" ON news FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all" ON team_members FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all" ON feedbacks FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all" ON leads FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow all" ON calc_inquiries FOR ALL USING (true) WITH CHECK (true);
+-- Public catalog/content is read-only; no stored rows are changed.
+DROP POLICY IF EXISTS "Allow all" ON products;
+DROP POLICY IF EXISTS public_read_products ON products;
+CREATE POLICY public_read_products ON products
+  FOR SELECT TO anon, authenticated USING (true);
+
+DROP POLICY IF EXISTS "Allow all" ON categories;
+DROP POLICY IF EXISTS public_read_categories ON categories;
+CREATE POLICY public_read_categories ON categories
+  FOR SELECT TO anon, authenticated USING (true);
+
+DROP POLICY IF EXISTS "Allow all" ON news;
+DROP POLICY IF EXISTS public_read_news ON news;
+CREATE POLICY public_read_news ON news
+  FOR SELECT TO anon, authenticated USING (true);
+
+DROP POLICY IF EXISTS "Allow all" ON team_members;
+DROP POLICY IF EXISTS public_read_team_members ON team_members;
+REVOKE SELECT ON TABLE team_members FROM PUBLIC, anon, authenticated;
+GRANT SELECT (id, name, role, image_url) ON TABLE team_members TO anon, authenticated;
+CREATE POLICY public_read_team_members ON team_members
+  FOR SELECT TO anon, authenticated USING (true);
+
+-- Only approved feedback is publicly readable; new submissions start unapproved.
+DROP POLICY IF EXISTS "Allow all" ON feedbacks;
+DROP POLICY IF EXISTS public_read_approved_feedback ON feedbacks;
+DROP POLICY IF EXISTS public_submit_unapproved_feedback ON feedbacks;
+CREATE POLICY public_read_approved_feedback ON feedbacks
+  FOR SELECT TO anon, authenticated USING (approved IS TRUE);
+CREATE POLICY public_submit_unapproved_feedback ON feedbacks
+  FOR INSERT TO anon, authenticated WITH CHECK (approved IS FALSE);
+
+-- New inquiries may be submitted; existing inquiries are not publicly readable or mutable.
+DROP POLICY IF EXISTS "Allow all" ON leads;
+DROP POLICY IF EXISTS public_submit_leads ON leads;
+CREATE POLICY public_submit_leads ON leads
+  FOR INSERT TO anon, authenticated WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow all" ON calc_inquiries;
+DROP POLICY IF EXISTS public_submit_calc_inquiries ON calc_inquiries;
+CREATE POLICY public_submit_calc_inquiries ON calc_inquiries
+  FOR INSERT TO anon, authenticated WITH CHECK (true);
 
 -- 8. Service Types table (Buyurtma turlari)
 CREATE TABLE IF NOT EXISTS service_types (
@@ -111,7 +145,10 @@ CREATE TABLE IF NOT EXISTS service_types (
 );
 
 ALTER TABLE service_types ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Allow all" ON service_types FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Allow all" ON service_types;
+DROP POLICY IF EXISTS public_read_service_types ON service_types;
+CREATE POLICY public_read_service_types ON service_types
+  FOR SELECT TO anon, authenticated USING (true);
 
 -- Enable real-time for key tables
 ALTER PUBLICATION supabase_realtime ADD TABLE products;
@@ -121,26 +158,11 @@ ALTER PUBLICATION supabase_realtime ADD TABLE news;
 ALTER PUBLICATION supabase_realtime ADD TABLE team_members;
 ALTER PUBLICATION supabase_realtime ADD TABLE feedbacks;
 
--- 8. Supabase Storage Policies for 'sanam' bucket
--- These policies allow public users to upload, read, update, and delete files in the 'sanam' bucket.
--- Make sure the bucket 'sanam' is created and marked as public in the Supabase Dashboard.
-
-CREATE POLICY "Allow public insert to sanam bucket"
-ON storage.objects FOR INSERT
-TO public
-WITH CHECK (bucket_id = 'sanam');
-
+-- Supabase Storage Policies for the 'sanam' bucket.
+-- Keep public reads of existing files; public inserts, updates, and deletes are disabled.
+DROP POLICY IF EXISTS "Allow public insert to sanam bucket" ON storage.objects;
+DROP POLICY IF EXISTS "Allow public select to sanam bucket" ON storage.objects;
+DROP POLICY IF EXISTS "Allow public update to sanam bucket" ON storage.objects;
+DROP POLICY IF EXISTS "Allow public delete to sanam bucket" ON storage.objects;
 CREATE POLICY "Allow public select to sanam bucket"
-ON storage.objects FOR SELECT
-TO public
-USING (bucket_id = 'sanam');
-
-CREATE POLICY "Allow public update to sanam bucket"
-ON storage.objects FOR UPDATE
-TO public
-USING (bucket_id = 'sanam');
-
-CREATE POLICY "Allow public delete to sanam bucket"
-ON storage.objects FOR DELETE
-TO public
-USING (bucket_id = 'sanam');
+  ON storage.objects FOR SELECT TO public USING (bucket_id = 'sanam');
