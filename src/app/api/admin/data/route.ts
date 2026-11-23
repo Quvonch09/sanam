@@ -22,7 +22,7 @@ function isTable(value: string): value is TableName {
 function jsonError(message: string, status: number) { return NextResponse.json({ error: message }, { status, headers: { 'Cache-Control': 'no-store' } }); }
 
 export async function GET(request: NextRequest) {
-  if (!hasAdminSession(request)) return jsonError('Unauthorized', 401);
+  if (!(await hasAdminSession(request))) return jsonError('Unauthorized', 401);
   const table = request.nextUrl.searchParams.get('table');
   if (!table || !isTable(table) || request.nextUrl.searchParams.size !== 1) return jsonError('Invalid table', 400);
   try {
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!hasAdminSession(request)) return jsonError('Unauthorized', 401);
+  if (!(await hasAdminSession(request))) return jsonError('Unauthorized', 401);
   if (!isSameOriginMutation(request)) return jsonError('Forbidden', 403);
   let body: unknown;
   try { body = await request.json(); } catch { return jsonError('Invalid request', 400); }

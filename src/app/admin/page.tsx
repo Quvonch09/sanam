@@ -29,9 +29,10 @@ const getUnknownErrorMessage = (error: unknown): string => {
 
 interface AdminDashboardProps {
   onLogout: () => void;
+  logoutError: string;
 }
 
-function AdminDashboard({ onLogout }: AdminDashboardProps) {
+function AdminDashboard({ onLogout, logoutError }: AdminDashboardProps) {
   const {
     isDarkMode,
     toggleTheme,
@@ -499,6 +500,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
         {/* Sidebar Footer — just logout */}
         <div className={`pt-4 border-t ${isDarkMode ? 'border-slate-800' : 'border-slate-200'}`}>
+          {logoutError && <p role="alert" className="mb-3 text-xs text-red-400">{logoutError}</p>}
           <button
             onClick={onLogout}
             className="w-full py-2.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2"
@@ -2029,6 +2031,7 @@ export default function AdminPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loginLang, setLoginLang] = useState<Language>('uz');
+  const [logoutError, setLogoutError] = useState('');
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -2043,9 +2046,16 @@ export default function AdminPage() {
       fetch('/api/admin/session', { credentials: 'same-origin', cache: 'no-store' })
         .then((response) => {
           if (validStoredLang) setLoginLang(validStoredLang);
-          setAuthState(response.ok ? 'authenticated' : 'unauthenticated');
+          if (response.ok) setAuthState('authenticated');
+          else {
+            if (response.status >= 500) setError('Admin sessiya xizmati vaqtincha ishlamayapti. Keyinroq qayta urinib ko‘ring.');
+            setAuthState('unauthenticated');
+          }
         })
-        .catch(() => setAuthState('unauthenticated'));
+        .catch(() => {
+          setError('Admin sessiya xizmati vaqtincha ishlamayapti. Keyinroq qayta urinib ko‘ring.');
+          setAuthState('unauthenticated');
+        });
     }
   }, []);
 
@@ -2064,27 +2074,35 @@ export default function AdminPage() {
       setPassword('');
       if (response.ok) {
         setAuthState('authenticated');
+      } else if (response.status >= 500) {
+        setError('Admin sessiya xizmati vaqtincha ishlamayapti. Keyinroq qayta urinib ko‘ring.');
       } else {
         setError(tLogin.errorMsg);
       }
     } catch {
-      setError(tLogin.errorMsg);
+      setError('Admin sessiya xizmati vaqtincha ishlamayapti. Keyinroq qayta urinib ko‘ring.');
     }
   };
 
   const handleLogout = async () => {
+    setLogoutError('');
     try {
-      await fetch('/api/admin/session', {
+      const response = await fetch('/api/admin/session', {
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'logout' }),
       });
-    } finally {
+      if (!response.ok) {
+        setLogoutError('Chiqish tasdiqlanmadi. Ulanishni tekshirib, qayta urinib ko‘ring.');
+        return;
+      }
       setAuthState('unauthenticated');
+      setUsername('');
+      setPassword('');
+    } catch {
+      setLogoutError('Chiqish tasdiqlanmadi. Ulanishni tekshirib, qayta urinib ko‘ring.');
     }
-    setUsername('');
-    setPassword('');
   };
 
   if (authState === 'checking') {
@@ -2158,7 +2176,7 @@ export default function AdminPage() {
 
   return (
     <AppProvider>
-      <AdminDashboard onLogout={handleLogout} />
+      <AdminDashboard onLogout={handleLogout} logoutError={logoutError} />
     </AppProvider>
   );
 }

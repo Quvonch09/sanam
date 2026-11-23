@@ -1,13 +1,16 @@
 import 'server-only';
 
-import { createHmac, timingSafeEqual, randomBytes } from 'node:crypto';
+import { createHash, createHmac, timingSafeEqual, randomBytes } from 'node:crypto';
 import type { NextRequest } from 'next/server';
+import { getSupabaseAdmin } from '@/lib/supabase-admin-server';
 
 const COOKIE_NAME = 'sanam_admin_session';
 const COOKIE_PATH = '/api/admin';
+const SESSION_TABLE = 'sanam_admin_sessions';
 const SESSION_TTL_SECONDS = 8 * 60 * 60;
 const MAX_LOGIN_ATTEMPTS = 8;
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const SESSION_ID_PATTERN = /^[A-Za-z0-9_-]{43}$/;
 const loginAttempts = new Map<string, { count: number; resetAt: number }>();
 
 function secret(name: string): string {
@@ -22,6 +25,10 @@ function signingKey(): Buffer {
   return createHmac('sha256', 'sanam-admin-session-key-v1').update(material).digest();
 }
 
+function credentialFingerprint(): string {
+  return createHmac('sha256', signingKey()).update('sanam-admin-credential-version-v1').digest('hex');
+}
+
 function mac(payload: string): string {
   return createHmac('sha256', signingKey()).update(`sanam-admin-session-v1\0${payload}`).digest('base64url');
 }
@@ -30,6 +37,27 @@ function equalText(a: string, b: string): boolean {
   const aa = Buffer.from(a);
   const bb = Buffer.from(b);
   return aa.length === bb.length && timingSafeEqual(aa, bb);
+}
+
+function sessionHash(sessionId: string): string {
+  return createHash('sha256').update(sessionId).digest('hex');
+}
+
+function parseSession(request: NextRequest): { sessionIdHash: string; expiresAtSeconds: number } | null {
+  const value = request.cookies.get(COOKIE_NAME)?.value;
+  if (!value) return null;
+  const parts = value.split('.');
+  if (parts.length !== 3 || !/^\d{1,12}$/.test(parts[0]) || !SESSION_ID_PATTERN.test(parts[1])) return null;
+  const [expiresText, sessionId, signature] = parts;
+  const expiresAtSeconds = Number(expiresText);
+  if (!Number.isSafeInteger(expiresAtSeconds) || expiresAtSeconds <= Math.floor(Date.now() / 1000)) return null;
+  const payload = `${expiresText}.${sessionId}`;
+  try {
+    if (!equalText(signature, mac(payload))) return null;
+  } catch {
+    return null;
+  }
+  return { sessionIdHash: sessionHash(sessionId), expiresAtSeconds };
 }
 
 export function checkAdminCredentials(username: string, password: string, clientKey: string): boolean {
@@ -57,8 +85,30 @@ export function checkAdminCredentials(username: string, password: string, client
   return false;
 }
 
-export function createAdminSessionCookie(): string {
-  const payload = `${Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS}.${randomBytes(16).toString('base64url')}`;
+export async function createAdminSessionCookie(): Promise<string> {
+  const expiresAtSeconds = Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS;
+  const now = new Date().toISOString();
+  const expiresAt = new Date(expiresAtSeconds * 1000).toISOString();
+  const sessionId = randomBytes(32).toString('base64url');
+  const sessionIdHash = sessionHash(sessionId);
+  const version = credentialFingerprint();
+  const supabase = getSupabaseAdmin();
+
+  const { error: revokeOldError } = await supabase
+    .from(SESSION_TABLE)
+    .update({ revoked_at: now })
+    .neq('credential_fingerprint', version)
+    .is('revoked_at', null);
+  if (revokeOldError) throw new Error('Unable to revoke sessions from an older credential version');
+
+  const { error } = await supabase.from(SESSION_TABLE).insert({
+    session_id_hash: sessionIdHash,
+    credential_fingerprint: version,
+    expires_at: expiresAt,
+  });
+  if (error) throw new Error('Unable to create admin session');
+
+  const payload = `${expiresAtSeconds}.${sessionId}`;
   return `${COOKIE_NAME}=${payload}.${mac(payload)}; Path=${COOKIE_PATH}; Max-Age=${SESSION_TTL_SECONDS}; HttpOnly; Secure; SameSite=Strict`;
 }
 
@@ -66,16 +116,39 @@ export function clearAdminSessionCookie(): string {
   return `${COOKIE_NAME}=; Path=${COOKIE_PATH}; Max-Age=0; HttpOnly; Secure; SameSite=Strict`;
 }
 
-export function hasAdminSession(request: NextRequest): boolean {
-  const value = request.cookies.get(COOKIE_NAME)?.value;
-  if (!value) return false;
-  const parts = value.split('.');
-  if (parts.length !== 3) return false;
-  const payload = `${parts[0]}.${parts[1]}`;
-  const expiry = Number(parts[0]);
-  if (!Number.isSafeInteger(expiry) || expiry <= Math.floor(Date.now() / 1000)) return false;
+export async function hasAdminSession(request: NextRequest): Promise<boolean> {
+  const parsed = parseSession(request);
+  if (!parsed) return false;
+
   try {
-    return equalText(parts[2], mac(payload));
+    const { data, error } = await getSupabaseAdmin()
+      .from(SESSION_TABLE)
+      .select('expires_at, revoked_at, credential_fingerprint')
+      .eq('session_id_hash', parsed.sessionIdHash)
+      .maybeSingle();
+    if (error || !data || data.revoked_at !== null) return false;
+    const storedExpiry = Date.parse(data.expires_at);
+    if (!Number.isFinite(storedExpiry) || storedExpiry <= Date.now()) return false;
+    if (Math.floor(storedExpiry / 1000) !== parsed.expiresAtSeconds) return false;
+    return equalText(data.credential_fingerprint, credentialFingerprint());
+  } catch {
+    return false;
+  }
+}
+
+export async function revokeAdminSession(request: NextRequest): Promise<boolean> {
+  const value = request.cookies.get(COOKIE_NAME)?.value;
+  if (!value) return true;
+  const parts = value.split('.');
+  if (parts.length !== 3 || !/^\d{1,12}$/.test(parts[0]) || !SESSION_ID_PATTERN.test(parts[1])) return true;
+
+  try {
+    const { error } = await getSupabaseAdmin()
+      .from(SESSION_TABLE)
+      .update({ revoked_at: new Date().toISOString() })
+      .eq('session_id_hash', sessionHash(parts[1]))
+      .is('revoked_at', null);
+    return !error;
   } catch {
     return false;
   }

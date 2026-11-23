@@ -20,7 +20,7 @@ function error(message: string, status: number) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!hasAdminSession(request)) return error('Unauthorized', 401);
+  if (!(await hasAdminSession(request))) return error('Unauthorized', 401);
   if (!isSameOriginMutation(request)) return error('Forbidden', 403);
 
   let body: unknown;

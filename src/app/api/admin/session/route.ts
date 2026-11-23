@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { checkAdminCredentials, clearAdminSessionCookie, createAdminSessionCookie, hasAdminSession, isSameOriginMutation, loginClientKey } from '@/lib/admin-auth-server';
+import { checkAdminCredentials, clearAdminSessionCookie, createAdminSessionCookie, hasAdminSession, isSameOriginMutation, loginClientKey, revokeAdminSession } from '@/lib/admin-auth-server';
 
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
-  if (!hasAdminSession(request)) return NextResponse.json({ authenticated: false }, { status: 401 });
+  if (!(await hasAdminSession(request))) return NextResponse.json({ authenticated: false }, { status: 401, headers: { 'Cache-Control': 'no-store' } });
   return NextResponse.json({ authenticated: true }, { headers: { 'Cache-Control': 'no-store' } });
 }
 
@@ -15,8 +15,8 @@ export async function POST(request: NextRequest) {
   if (!body || typeof body !== 'object' || Array.isArray(body)) return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   const input = body as Record<string, unknown>;
   if (input.action === 'logout') {
-    if (!hasAdminSession(request)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const response = NextResponse.json({ authenticated: false });
+    if (!(await revokeAdminSession(request))) return NextResponse.json({ error: 'Unable to end admin session' }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
+    const response = NextResponse.json({ authenticated: false }, { headers: { 'Cache-Control': 'no-store' } });
     response.headers.append('Set-Cookie', clearAdminSessionCookie());
     return response;
   }
@@ -26,7 +26,12 @@ export async function POST(request: NextRequest) {
   if (!checkAdminCredentials(input.username, input.password, loginClientKey(request))) {
     return NextResponse.json({ error: 'Invalid credentials' }, { status: 401, headers: { 'Cache-Control': 'no-store' } });
   }
-  const response = NextResponse.json({ authenticated: true }, { headers: { 'Cache-Control': 'no-store' } });
-  response.headers.append('Set-Cookie', createAdminSessionCookie());
-  return response;
+  try {
+    const cookie = await createAdminSessionCookie();
+    const response = NextResponse.json({ authenticated: true }, { headers: { 'Cache-Control': 'no-store' } });
+    response.headers.append('Set-Cookie', cookie);
+    return response;
+  } catch {
+    return NextResponse.json({ error: 'Admin session service unavailable' }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
+  }
 }
